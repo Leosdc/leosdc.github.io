@@ -1,6 +1,6 @@
 # 📚 Mundo da Alice
 
-App da princesa Ana Alice para organizar e gerenciar livros e séries!
+App que fiz para minha esposa organizar e gerenciar livros e séries!
 
 ## 🌟 Funcionalidades
 
