@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📚 Minha Biblioteca</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-50 to-pink-50 min-h-screen">
+    <div id="app"></div>
+
+    <script>
+        let items = [];
+        let showForm = false;
+        let filter = 'all';
+        let searchTerm = '';
+        let editingId = null;
+        let formData = {
+            title: '',
+            author: '',
+            pages: '',
+            status: 'Quero ler/assistir',
+            rating: '',
+            date: '',
+            category: 'Livro',
+            country: '',
+            avgTime: ''
+        };
+
+        const statusOptions = ['Quero ler/assistir', 'Lido', 'Assistido', 'Desisti'];
+        const ratingOptions = ['Maravilhoso 😍', 'Muito bom 😊', 'Bom 🙂', 'Mais ou menos 🤨', 'Ruim 🙁', 'Péssimo 😒'];
+        const categoryOptions = ['Livro', 'Série'];
+        const countryOptions = ['Brasil', 'Coreia do Sul', 'China', 'Japão', 'Taiwan', 'Tailândia', 'Estados Unidos', 'Outro'];
+
+        function loadData() {
+            const saved = localStorage.getItem('biblioteca-items');
+            if (saved) {
+                items = JSON.parse(saved);
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('biblioteca-items', JSON.stringify(items));
+        }
+
+        function handleSubmit() {
+            if (!formData.title) {
+                alert('O título é obrigatório');
+                return;
+            }
+
+            const newItem = {
+                id: editingId || Date.now(),
+                ...formData,
+                pages: formData.category === 'Livro' ? `${formData.pages} Páginas` : `${formData.pages} Episódios`,
+                avgTime: formData.avgTime || (formData.category === 'Série' ? '01:00:00' : ''),
+                date: formData.date || new Date().toLocaleDateString('pt-BR')
+            };
+
+            if (editingId) {
+                items = items.map(item => item.id === editingId ? newItem : item);
+            } else {
+                items.push(newItem);
+            }
+
+            saveData();
+            resetForm();
+            render();
+        }
+
+        function handleDelete(id) {
+            if (confirm('Deseja realmente excluir este item?')) {
+                items = items.filter(item => item.id !== id);
+                saveData();
+                render();
+            }
+        }
+
+        function handleEdit(item) {
+            editingId = item.id;
+            formData = {
+                title: item.title,
+                author: item.author || '',
+                pages: item.pages.replace(' Páginas', '').replace(' Episódios', ''),
+                status: item.status,
+                rating: item.rating,
+                date: item.date,
+                category: item.category,
+                country: item.country || '',
+                avgTime: item.avgTime || ''
+            };
+            showForm = true;
+            render();
+        }
+
+        function resetForm() {
+            formData = {
+                title: '',
+                author: '',
+                pages: '',
+                status: 'Quero ler/assistir',
+                rating: '',
+                date: '',
+                category: 'Livro',
+                country: '',
+                avgTime: ''
+            };
+            showForm = false;
+            editingId = null;
+        }
+
+        function getFilteredItems() {
+            return items.filter(item => {
+                const matchesFilter = filter === 'all' || 
+                                     (filter === 'books' && item.category === 'Livro') ||
+                                     (filter === 'series' && item.category === 'Série');
+                const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                     (item.author && item.author.toLowerCase().includes(searchTerm.toLowerCase()));
+                return matchesFilter && matchesSearch;
+            });
+        }
+
+        function getStats() {
+            return {
+                total: items.length,
+                books: items.filter(i => i.category === 'Livro').length,
+                series: items.filter(i => i.category === 'Série').length,
+                completed: items.filter(i => i.status === 'Lido' || i.status === 'Assistido').length
+            };
+        }
+
+        function render() {
+            const stats = getStats();
+            const filteredItems = getFilteredItems();
+
+            document.getElementById('app').innerHTML = `
+                <!-- Header -->
+                <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 shadow-lg">
+                    <div class="max-w-6xl mx-auto">
+                        <h1 class="text-3xl font-bold mb-2">📚 Minha Biblioteca</h1>
+                        <p class="text-purple-100">Organize seus livros e séries favoritas</p>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="max-w-6xl mx-auto px-4 mt-6 mb-6">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-white rounded-xl p-4 shadow-md">
+                            <div class="text-2xl font-bold text-purple-600">${stats.total}</div>
+                            <div class="text-sm text-gray-600">Total</div>
+                        </div>
+                        <div class="bg-white rounded-xl p-4 shadow-md">
+                            <div class="text-2xl font-bold text-blue-600">${stats.books}</div>
+                            <div class="text-sm text-gray-600">Livros</div>
+                        </div>
+                        <div class="bg-white rounded-xl p-4 shadow-md">
+                            <div class="text-2xl font-bold text-pink-600">${stats.series}</div>
+                            <div class="text-sm text-gray-600">Séries</div>
+                        </div>
+                        <div class="bg-white rounded-xl p-4 shadow-md">
+                            <div class="text-2xl font-bold text-green-600">${stats.completed}</div>
+                            <div class="text-sm text-gray-600">Concluídos</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="max-w-6xl mx-auto px-4 pb-8">
+                    <!-- Controls -->
+                    <div class="bg-white rounded-xl shadow-md p-4 mb-6">
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <input
+                                type="text"
+                                placeholder="🔍 Buscar título ou autor..."
+                                value="${searchTerm}"
+                                onchange="searchTerm = this.value; render();"
+                                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                            />
+                            
+                            <div class="flex gap-2 flex-wrap">
+                                <button
+                                    onclick="filter = 'all'; render();"
+                                    class="px-4 py-2 rounded-lg font-medium ${filter === 'all' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700'}"
+                                >
+                                    Todos
+                                </button>
+                                <button
+                                    onclick="filter = 'books'; render();"
+                                    class="px-4 py-2 rounded-lg font-medium ${filter === 'books' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}"
+                                >
+                                    📖 Livros
+                                </button>
+                                <button
+                                    onclick="filter = 'series'; render();"
+                                    class="px-4 py-2 rounded-lg font-medium ${filter === 'series' ? 'bg-pink-600 text-white' : 'bg-gray-100 text-gray-700'}"
+                                >
+                                    📺 Séries
+                                </button>
+                                <button
+                                    onclick="showForm = !showForm; render();"
+                                    class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-lg font-medium"
+                                >
+                                    ➕ Adicionar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form -->
+                    ${showForm ? `
+                    <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                        <h2 class="text-2xl font-bold mb-4 text-gray-800">
+                            ${editingId ? 'Editar Item' : 'Adicionar Novo Item'}
+                        </h2>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                                    <select
+                                        onchange="formData.category = this.value; render();"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                    >
+                                        ${categoryOptions.map(opt => `<option value="${opt}" ${formData.category === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                    <select
+                                        onchange="formData.status = this.value;"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                    >
+                                        ${statusOptions.map(opt => `<option value="${opt}" ${formData.status === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                                    </select>
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Título *</label>
+                                    <input
+                                        type="text"
+                                        value="${formData.title}"
+                                        onchange="formData.title = this.value;"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                    />
+                                </div>
+
+                                ${formData.category === 'Livro' ? `
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Autor</label>
+                                    <input
+                                        type="text"
+                                        value="${formData.author}"
+                                        onchange="formData.author = this.value;"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                    />
+                                </div>
+                                ` : ''}
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        ${formData.category === 'Livro' ? 'Páginas' : 'Episódios'}
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value="${formData.pages}"
+                                        onchange="formData.pages = this.value;"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Avaliação</label>
+                                    <select
+                                        onchange="formData.rating = this.value;"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                    >
+                                        <option value="">Selecione...</option>
+                                        ${ratingOptions.map(opt => `<option value="${opt}" ${formData.rating === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Data</label>
+                                    <input
+                                        type="text"
+                                        value="${formData.date}"
+                                        onchange="formData.date = this.value;"
+                                        placeholder="dd/mm/aaaa"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                    />
+                                </div>
+
+                                ${formData.category === 'Série' ? `
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">País</label>
+                                    <select
+                                        onchange="formData.country = this.value;"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                    >
+                                        <option value="">Selecione...</option>
+                                        ${countryOptions.map(opt => `<option value="${opt}" ${formData.country === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Tempo Médio (hh:mm:ss)</label>
+                                    <input
+                                        type="text"
+                                        value="${formData.avgTime}"
+                                        onchange="formData.avgTime = this.value;"
+                                        placeholder="01:00:00"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                    />
+                                </div>
+                                ` : ''}
+                            </div>
+
+                            <div class="flex gap-3 pt-4">
+                                <button
+                                    onclick="handleSubmit();"
+                                    class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-medium"
+                                >
+                                    ${editingId ? 'Atualizar' : 'Adicionar'}
+                                </button>
+                                <button
+                                    onclick="resetForm(); render();"
+                                    class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <!-- Items List -->
+                    <div class="space-y-4">
+                        ${filteredItems.length === 0 ? `
+                        <div class="bg-white rounded-xl shadow-md p-12 text-center">
+                            <div class="text-6xl mb-4">${searchTerm ? '🔍' : '📚'}</div>
+                            <p class="text-gray-500 text-lg">
+                                ${searchTerm ? 'Nenhum resultado encontrado' : 'Nenhum item adicionado ainda'}
+                            </p>
+                        </div>
+                        ` : filteredItems.map(item => `
+                        <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-6">
+                            <div class="flex items-start justify-between flex-wrap gap-4">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-start gap-3 mb-3">
+                                        <div class="text-3xl">${item.category === 'Livro' ? '📖' : '📺'}</div>
+                                        <div class="flex-1">
+                                            <h3 class="text-xl font-bold text-gray-800">${item.title}</h3>
+                                            ${item.author ? `<p class="text-gray-600 mt-1">${item.author}</p>` : ''}
+                                        </div>
+                                    </div>
+
+                                    <div class="flex flex-wrap gap-2 text-sm">
+                                        <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full font-medium">
+                                            ${item.status}
+                                        </span>
+                                        ${item.rating ? `
+                                        <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full font-medium">
+                                            ${item.rating}
+                                        </span>
+                                        ` : ''}
+                                        <span class="text-gray-600">📅 ${item.date}</span>
+                                        ${item.pages ? `<span class="text-gray-600">${item.pages}</span>` : ''}
+                                        ${item.country ? `<span class="text-gray-600">🌍 ${item.country}</span>` : ''}
+                                        ${item.avgTime ? `<span class="text-gray-600">⏱️ ${item.avgTime}</span>` : ''}
+                                    </div>
+                                </div>
+
+                                <div class="flex gap-2">
+                                    <button
+                                        onclick='handleEdit(${JSON.stringify(item).replace(/'/g, "\\'")})'
+                                        class="px-4 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
+                                    >
+                                        Editar
+                                    </button>
+                                    <button
+                                        onclick="handleDelete(${item.id})"
+                                        class="px-4 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
+                                    >
+                                        Excluir
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        loadData();
+        render();
+    </script>
+</body>
+</html>
