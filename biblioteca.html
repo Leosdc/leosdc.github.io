@@ -58,8 +58,7 @@
         let chartPeriod = 'monthly';
         let chartType = 'all';
         let loading = false;
-        let sortBy = 'date-desc'; // date-desc, date-asc, title-asc, title-desc, category, status
-        let showSortMenu = false;
+        let sortBy = 'date-desc';
         let loginData = {
             username: '',
             password: ''
@@ -418,6 +417,21 @@
             editingId = null;
         }
 
+        function compareDates(dateA, dateB) {
+            if (!dateA) return 1;
+            if (!dateB) return -1;
+            
+            const parseDate = (str) => {
+                const parts = str.split('/');
+                if (parts.length === 3) {
+                    return new Date(parts[2], parts[1] - 1, parts[0]);
+                }
+                return new Date(0);
+            };
+            
+            return parseDate(dateA) - parseDate(dateB);
+        }
+
         function getFilteredItems() {
             let filtered = items.filter(item => {
                 const matchesFilter = filter === 'all' || 
@@ -455,32 +469,6 @@
             });
 
             return filtered;
-        }
-
-        function compareDates(dateA, dateB) {
-            if (!dateA) return 1;
-            if (!dateB) return -1;
-            
-            const parseDate = (str) => {
-                const parts = str.split('/');
-                if (parts.length === 3) {
-                    return new Date(parts[2], parts[1] - 1, parts[0]);
-                }
-                return new Date(0);
-            };
-            
-            return parseDate(dateA) - parseDate(dateB);
-        }
-
-        function getFilteredItems() {
-            return items.filter(item => {
-                const matchesFilter = filter === 'all' || 
-                                     (filter === 'books' && item.category === 'Livro') ||
-                                     (filter === 'series' && item.category === 'Série');
-                const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                     (item.author && item.author.toLowerCase().includes(searchTerm.toLowerCase()));
-                return matchesFilter && matchesSearch;
-            });
         }
 
         function getStats() {
@@ -566,217 +554,6 @@
                                         >
                                             <span class="text-white font-bold text-xs md:text-sm">${item.value}</span>
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            `;
-        }
-
-        function renderLogin() {
-            document.getElementById('app').innerHTML = `
-                <div class="min-h-screen flex items-center justify-center p-4">
-                    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
-                        <div class="text-center mb-8">
-                            <div class="text-6xl mb-4">📚</div>
-                            <h1 class="text-3xl font-bold text-gray-800 mb-2">Mundo da Alice</h1>
-                            <p class="text-gray-600">App da princesa Ana Alice! ❤️</p>
-                        </div>
-
-                        <div class="mb-6">
-                            <div class="flex gap-2 bg-gray-100 rounded-lg p-1 mb-6">
-                                <button
-                                    onclick="isLoginMode = true; renderLogin();"
-                                    class="flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${isLoginMode ? 'bg-white shadow-sm' : ''}"
-                                >
-                                    Entrar
-                                </button>
-                                <button
-                                    onclick="isLoginMode = false; renderLogin();"
-                                    class="flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${!isLoginMode ? 'bg-white shadow-sm' : ''}"
-                                >
-                                    Cadastrar
-                                </button>
-                            </div>
-
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Usuário</label>
-                                    <input
-                                        type="text"
-                                        value="${loginData.username}"
-                                        oninput="loginData.username = this.value;"
-                                        placeholder="Digite seu usuário"
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                        ${loading ? 'disabled' : ''}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
-                                    <input
-                                        type="password"
-                                        value="${loginData.password}"
-                                        oninput="loginData.password = this.value;"
-                                        onkeypress="if(event.key === 'Enter') ${isLoginMode ? 'handleLogin()' : 'handleRegister()'};"
-                                        placeholder="Digite sua senha"
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                        ${loading ? 'disabled' : ''}
-                                    />
-                                </div>
-
-                                <button
-                                    onclick="${isLoginMode ? 'handleLogin()' : 'handleRegister()'};"
-                                    class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-medium hover:shadow-lg transition-shadow disabled:opacity-50"
-                                    ${loading ? 'disabled' : ''}
-                                >
-                                    ${loading ? 'Aguarde...' : (isLoginMode ? '🔐 Entrar' : '✨ Criar Conta')}
-                                </button>
-                            </div>
-                        </div>
-
-                        ${!isLoginMode ? `
-                        <div class="text-center text-sm text-gray-500 mt-4">
-                            <p>💡 Escolha um usuário e senha fáceis de lembrar!</p>
-                            <p class="mt-1">Mínimo 4 caracteres na senha.</p>
-                        </div>
-                        ` : ''}
-                    </div>
-                </div>
-            `;
-        }
-
-        function render() {
-            if (!currentUser) {
-                renderLogin();
-                return;
-            }
-
-            loadMoreItems();
-            const stats = getStats();
-            const filteredItems = getFilteredItems();
-            const hasMore = displayedItems.length < filteredItems.length;
-
-            document.getElementById('app').innerHTML = `
-                <!-- Header -->
-                <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 shadow-lg">
-                    <div class="max-w-6xl mx-auto flex justify-between items-center flex-wrap gap-4">
-                        <div>
-                            <h1 class="text-3xl font-bold mb-2">Mundo da Alice</h1>
-                            <p class="text-purple-100">App da princesa Ana Alice! ❤️</p>
-                            ${loading ? '<p class="text-purple-200 mt-2 flex items-center gap-2"><span class="loading"></span> Carregando...</p>' : ''}
-                        </div>
-                        <div class="text-right">
-                            <p class="text-purple-100 text-sm mb-2">👤 ${currentUser.username}</p>
-                            <button
-                                onclick="handleLogout();"
-                                class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                            >
-                                Sair
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Stats -->
-                <div class="max-w-6xl mx-auto px-4 mt-6 mb-6">
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div class="bg-white rounded-xl p-4 shadow-md">
-                            <div class="text-2xl font-bold text-purple-600">${stats.total}</div>
-                            <div class="text-sm text-gray-600">Total</div>
-                        </div>
-                        <div class="bg-white rounded-xl p-4 shadow-md">
-                            <div class="text-2xl font-bold text-blue-600">${stats.books}</div>
-                            <div class="text-sm text-gray-600">Livros</div>
-                        </div>
-                        <div class="bg-white rounded-xl p-4 shadow-md">
-                            <div class="text-2xl font-bold text-pink-600">${stats.series}</div>
-                            <div class="text-sm text-gray-600">Séries</div>
-                        </div>
-                        <div class="bg-white rounded-xl p-4 shadow-md">
-                            <div class="text-2xl font-bold text-green-600">${stats.completed}</div>
-                            <div class="text-sm text-gray-600">Concluídos</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="max-w-6xl mx-auto px-4 pb-8">
-                    <!-- Controls -->
-                    <div class="bg-white rounded-xl shadow-md p-4 mb-6">
-                        <div class="space-y-3">
-                            <div class="flex gap-2">
-                                <input
-                                    type="text"
-                                    id="searchInput"
-                                    placeholder="🔍 Buscar..."
-                                    value="${searchInput}"
-                                    onkeypress="if(event.key === 'Enter') performSearch();"
-                                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 text-sm"
-                                />
-                                <button
-                                    onclick="performSearch();"
-                                    class="px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors text-sm whitespace-nowrap"
-                                >
-                                    Buscar
-                                </button>
-                                ${searchTerm ? `
-                                <button
-                                    onclick="searchTerm = ''; searchInput = ''; render();"
-                                    class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors text-sm"
-                                >
-                                    ✕
-                                </button>
-                                ` : ''}
-                            </div>
-                            
-                            <div class="flex gap-2 overflow-x-auto pb-2">
-                                <button
-                                    onclick="filter = 'all'; render();"
-                                    class="px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${filter === 'all' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700'}"
-                                >
-                                    Todos
-                                </button>
-                                <button
-                                    onclick="filter = 'books'; render();"
-                                    class="px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${filter === 'books' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}"
-                                >
-                                    📖 Livros
-                                </button>
-                                <button
-                                    onclick="filter = 'series'; render();"
-                                    class="px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${filter === 'series' ? 'bg-pink-600 text-white' : 'bg-gray-100 text-gray-700'}"
-                                >
-                                    📺 Séries
-                                </button>
-                            </div>
-
-                            <div class="flex gap-2 overflow-x-auto pb-2">
-                                <button
-                                    onclick="showCharts = !showCharts; render();"
-                                    class="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow text-sm whitespace-nowrap"
-                                    ${loading ? 'disabled' : ''}
-                                >
-                                    📊 Gráficos
-                                </button>
-                                <button
-                                    onclick="showForm = !showForm; render();"
-                                    class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow text-sm whitespace-nowrap"
-                                    ${loading ? 'disabled' : ''}
-                                >
-                                    ➕ Adicionar
-                                </button>
-                                <button
-                                    onclick="loadData();"
-                                    class="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow text-sm whitespace-nowrap"
-                                    ${loading ? 'disabled' : ''}
-                                >
-                                    🔄
-                                </button>
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- Charts Panel -->
                     ${showCharts ? `
@@ -1093,3 +870,230 @@
     </script>
 </body>
 </html>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function renderLogin() {
+            document.getElementById('app').innerHTML = `
+                <div class="min-h-screen flex items-center justify-center p-4">
+                    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+                        <div class="text-center mb-8">
+                            <div class="text-6xl mb-4">📚</div>
+                            <h1 class="text-3xl font-bold text-gray-800 mb-2">Mundo da Alice</h1>
+                            <p class="text-gray-600">App da princesa Ana Alice! ❤️</p>
+                        </div>
+
+                        <div class="mb-6">
+                            <div class="flex gap-2 bg-gray-100 rounded-lg p-1 mb-6">
+                                <button
+                                    onclick="isLoginMode = true; renderLogin();"
+                                    class="flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${isLoginMode ? 'bg-white shadow-sm' : ''}"
+                                >
+                                    Entrar
+                                </button>
+                                <button
+                                    onclick="isLoginMode = false; renderLogin();"
+                                    class="flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${!isLoginMode ? 'bg-white shadow-sm' : ''}"
+                                >
+                                    Cadastrar
+                                </button>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Usuário</label>
+                                    <input
+                                        type="text"
+                                        value="${loginData.username}"
+                                        oninput="loginData.username = this.value;"
+                                        placeholder="Digite seu usuário"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        ${loading ? 'disabled' : ''}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+                                    <input
+                                        type="password"
+                                        value="${loginData.password}"
+                                        oninput="loginData.password = this.value;"
+                                        onkeypress="if(event.key === 'Enter') ${isLoginMode ? 'handleLogin()' : 'handleRegister()'};"
+                                        placeholder="Digite sua senha"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        ${loading ? 'disabled' : ''}
+                                    />
+                                </div>
+
+                                <button
+                                    onclick="${isLoginMode ? 'handleLogin()' : 'handleRegister()'};"
+                                    class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-medium hover:shadow-lg transition-shadow disabled:opacity-50"
+                                    ${loading ? 'disabled' : ''}
+                                >
+                                    ${loading ? 'Aguarde...' : (isLoginMode ? '🔐 Entrar' : '✨ Criar Conta')}
+                                </button>
+                            </div>
+                        </div>
+
+                        ${!isLoginMode ? `
+                        <div class="text-center text-sm text-gray-500 mt-4">
+                            <p>💡 Escolha um usuário e senha fáceis de lembrar!</p>
+                            <p class="mt-1">Mínimo 4 caracteres na senha.</p>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function render() {
+            if (!currentUser) {
+                renderLogin();
+                return;
+            }
+
+            loadMoreItems();
+            const stats = getStats();
+            const filteredItems = getFilteredItems();
+            const hasMore = displayedItems.length < filteredItems.length;
+
+            document.getElementById('app').innerHTML = `
+                <!-- Header -->
+                <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 shadow-lg">
+                    <div class="max-w-6xl mx-auto flex justify-between items-center flex-wrap gap-4">
+                        <div>
+                            <h1 class="text-3xl font-bold mb-2">Mundo da Alice</h1>
+                            <p class="text-purple-100">App da princesa Ana Alice! ❤️</p>
+                            ${loading ? '<p class="text-purple-200 mt-2 flex items-center gap-2"><span class="loading"></span> Carregando...</p>' : ''}
+                        </div>
+                        <div class="text-right">
+                            <p class="text-purple-100 text-sm mb-2">👤 ${currentUser.username}</p>
+                            <button
+                                onclick="handleLogout();"
+                                class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                            >
+                                Sair
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="max-w-6xl mx-auto px-4 mt-6 mb-6">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-white rounded-xl p-4 shadow-md">
+                            <div class="text-2xl font-bold text-purple-600">${stats.total}</div>
+                            <div class="text-sm text-gray-600">Total</div>
+                        </div>
+                        <div class="bg-white rounded-xl p-4 shadow-md">
+                            <div class="text-2xl font-bold text-blue-600">${stats.books}</div>
+                            <div class="text-sm text-gray-600">Livros</div>
+                        </div>
+                        <div class="bg-white rounded-xl p-4 shadow-md">
+                            <div class="text-2xl font-bold text-pink-600">${stats.series}</div>
+                            <div class="text-sm text-gray-600">Séries</div>
+                        </div>
+                        <div class="bg-white rounded-xl p-4 shadow-md">
+                            <div class="text-2xl font-bold text-green-600">${stats.completed}</div>
+                            <div class="text-sm text-gray-600">Concluídos</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="max-w-6xl mx-auto px-4 pb-8">
+                    <!-- Controls -->
+                    <div class="bg-white rounded-xl shadow-md p-4 mb-6">
+                        <div class="space-y-3">
+                            <div class="flex gap-2">
+                                <input
+                                    type="text"
+                                    id="searchInput"
+                                    placeholder="🔍 Buscar..."
+                                    value="${searchInput}"
+                                    onkeypress="if(event.key === 'Enter') performSearch();"
+                                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 text-sm"
+                                />
+                                <button
+                                    onclick="performSearch();"
+                                    class="px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors text-sm whitespace-nowrap"
+                                >
+                                    Buscar
+                                </button>
+                                ${searchTerm ? `
+                                <button
+                                    onclick="searchTerm = ''; searchInput = ''; resetPagination(); render();"
+                                    class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors text-sm"
+                                >
+                                    ✕
+                                </button>
+                                ` : ''}
+                            </div>
+                            
+                            <div class="flex gap-2 overflow-x-auto pb-2">
+                                <button
+                                    onclick="filter = 'all'; resetPagination(); render();"
+                                    class="px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${filter === 'all' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700'}"
+                                >
+                                    Todos
+                                </button>
+                                <button
+                                    onclick="filter = 'books'; resetPagination(); render();"
+                                    class="px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${filter === 'books' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}"
+                                >
+                                    📖 Livros
+                                </button>
+                                <button
+                                    onclick="filter = 'series'; resetPagination(); render();"
+                                    class="px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${filter === 'series' ? 'bg-pink-600 text-white' : 'bg-gray-100 text-gray-700'}"
+                                >
+                                    📺 Séries
+                                </button>
+                            </div>
+
+                            <div class="flex gap-2 items-center overflow-x-auto pb-2">
+                                <span class="text-sm text-gray-600 whitespace-nowrap">Ordenar:</span>
+                                <select
+                                    onchange="sortBy = this.value; resetPagination(); render();"
+                                    class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 text-sm bg-white"
+                                >
+                                    <option value="date-desc" ${sortBy === 'date-desc' ? 'selected' : ''}>📅 Mais recente</option>
+                                    <option value="date-asc" ${sortBy === 'date-asc' ? 'selected' : ''}>📅 Mais antigo</option>
+                                    <option value="title-asc" ${sortBy === 'title-asc' ? 'selected' : ''}>🔤 A-Z</option>
+                                    <option value="title-desc" ${sortBy === 'title-desc' ? 'selected' : ''}>🔤 Z-A</option>
+                                    <option value="category" ${sortBy === 'category' ? 'selected' : ''}>📂 Categoria</option>
+                                    <option value="status" ${sortBy === 'status' ? 'selected' : ''}>✅ Status</option>
+                                    <option value="rating" ${sortBy === 'rating' ? 'selected' : ''}>⭐ Avaliação</option>
+                                </select>
+                            </div>
+
+                            <div class="flex gap-2 overflow-x-auto pb-2">
+                                <button
+                                    onclick="showCharts = !showCharts; render();"
+                                    class="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow text-sm whitespace-nowrap"
+                                    ${loading ? 'disabled' : ''}
+                                >
+                                    📊 Gráficos
+                                </button>
+                                <button
+                                    onclick="showForm = !showForm; render();"
+                                    class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow text-sm whitespace-nowrap"
+                                    ${loading ? 'disabled' : ''}
+                                >
+                                    ➕ Adicionar
+                                </button>
+                                <button
+                                    onclick="loadData();"
+                                    class="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow text-sm whitespace-nowrap"
+                                    ${loading ? 'disabled' : ''}
+                                >
+                                    🔄 Atualizar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
