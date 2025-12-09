@@ -7,16 +7,11 @@
     <meta name="description" content="App da princesa Ana Alice para organizar livros e séries">
     <meta name="theme-color" content="#9333ea">
     
-    <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
     
-    <!-- PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Mundo da Alice">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%239333ea'/><text y='.9em' x='50%' text-anchor='middle' font-size='70' fill='white'>📚</text></svg>">
-    
-    <link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22Mundo%20da%20Alice%22%2C%22short_name%22%3A%22Mundo%20da%20Alice%22%2C%22description%22%3A%22App%20da%20princesa%20Ana%20Alice%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23ffffff%22%2C%22theme_color%22%3A%22%239333ea%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20512%20512%27%3E%3Crect%20width%3D%27512%27%20height%3D%27512%27%20fill%3D%27%239333ea%27%2F%3E%3Ctext%20y%3D%27.9em%27%20x%3D%2750%25%27%20text-anchor%3D%27middle%27%20font-size%3D%27380%27%20fill%3D%27white%27%3E%F0%9F%93%9A%3C%2Ftext%3E%3C%2Fsvg%3E%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%20maskable%22%7D%5D%7D">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -442,7 +437,6 @@
                 return matchesFilter && matchesSearch;
             });
 
-            // Aplicar ordenação
             filtered.sort((a, b) => {
                 switch(sortBy) {
                     case 'title-asc':
@@ -554,322 +548,6 @@
                                         >
                                             <span class="text-white font-bold text-xs md:text-sm">${item.value}</span>
                                         </div>
-
-                    <!-- Charts Panel -->
-                    ${showCharts ? `
-                    <div class="bg-white rounded-xl shadow-lg p-4 md:p-6 mb-6">
-                        <h2 class="text-xl md:text-2xl font-bold mb-4 text-gray-800">📊 Estatísticas</h2>
-                        
-                        <div class="space-y-3">
-                            <div class="flex gap-2 bg-gray-100 rounded-lg p-1 overflow-x-auto">
-                                <button
-                                    onclick="chartPeriod = 'daily'; render();"
-                                    class="px-3 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${chartPeriod === 'daily' ? 'bg-white shadow-sm' : ''}"
-                                >
-                                    Diário
-                                </button>
-                                <button
-                                    onclick="chartPeriod = 'monthly'; render();"
-                                    class="px-3 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${chartPeriod === 'monthly' ? 'bg-white shadow-sm' : ''}"
-                                >
-                                    Mensal
-                                </button>
-                                <button
-                                    onclick="chartPeriod = 'yearly'; render();"
-                                    class="px-3 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${chartPeriod === 'yearly' ? 'bg-white shadow-sm' : ''}"
-                                >
-                                    Anual
-                                </button>
-                            </div>
-
-                            <div class="flex gap-2 bg-gray-100 rounded-lg p-1 overflow-x-auto">
-                                <button
-                                    onclick="chartType = 'all'; render();"
-                                    class="px-3 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${chartType === 'all' ? 'bg-white shadow-sm' : ''}"
-                                >
-                                    Todos
-                                </button>
-                                <button
-                                    onclick="chartType = 'books'; render();"
-                                    class="px-3 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${chartType === 'books' ? 'bg-white shadow-sm' : ''}"
-                                >
-                                    📖 Livros
-                                </button>
-                                <button
-                                    onclick="chartType = 'series'; render();"
-                                    class="px-3 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${chartType === 'series' ? 'bg-white shadow-sm' : ''}"
-                                >
-                                    📺 Séries
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="mt-6">
-                            ${renderChart()}
-                        </div>
-                    </div>
-                    ` : ''}
-
-                    <!-- Form -->
-                    ${showForm ? `
-                    <div class="bg-white rounded-xl shadow-lg p-4 md:p-6 mb-6">
-                        <h2 class="text-xl md:text-2xl font-bold mb-4 text-gray-800">
-                            ${editingId !== null ? 'Editar Item' : 'Adicionar Novo Item'}
-                        </h2>
-                        <div class="space-y-4">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
-                                    <select
-                                        onchange="formData.category = this.value; render();"
-                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                                        ${loading ? 'disabled' : ''}
-                                    >
-                                        ${categoryOptions.map(opt => `<option value="${opt}" ${formData.category === opt ? 'selected' : ''}>${opt}</option>`).join('')}
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                                    <select
-                                        onchange="formData.status = this.value;"
-                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                                        ${loading ? 'disabled' : ''}
-                                    >
-                                        ${statusOptions.map(opt => `<option value="${opt}" ${formData.status === opt ? 'selected' : ''}>${opt}</option>`).join('')}
-                                    </select>
-                                </div>
-
-                                <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Título *</label>
-                                    <input
-                                        type="text"
-                                        value="${formData.title}"
-                                        oninput="formData.title = this.value;"
-                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                                        ${loading ? 'disabled' : ''}
-                                    />
-                                </div>
-
-                                ${formData.category === 'Livro' ? `
-                                <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Autor</label>
-                                    <input
-                                        type="text"
-                                        value="${formData.author}"
-                                        oninput="formData.author = this.value;"
-                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                                        ${loading ? 'disabled' : ''}
-                                    />
-                                </div>
-                                ` : ''}
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                                        ${formData.category === 'Livro' ? 'Páginas' : 'Episódios'}
-                                    </label>
-                                    <input
-                                        type="number"
-                                        value="${formData.pages}"
-                                        oninput="formData.pages = this.value;"
-                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                                        ${loading ? 'disabled' : ''}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Avaliação</label>
-                                    <select
-                                        onchange="formData.rating = this.value;"
-                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                                        ${loading ? 'disabled' : ''}
-                                    >
-                                        <option value="">Selecione...</option>
-                                        ${ratingOptions.map(opt => `<option value="${opt}" ${formData.rating === opt ? 'selected' : ''}>${opt}</option>`).join('')}
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Data</label>
-                                    <input
-                                        type="date"
-                                        value="${formData.date}"
-                                        onchange="formData.date = this.value;"
-                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                                        ${loading ? 'disabled' : ''}
-                                    />
-                                </div>
-
-                                ${formData.category === 'Série' ? `
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">País</label>
-                                    <select
-                                        onchange="formData.country = this.value;"
-                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                                        ${loading ? 'disabled' : ''}
-                                    >
-                                        <option value="">Selecione...</option>
-                                        ${countryOptions.map(opt => `<option value="${opt}" ${formData.country === opt ? 'selected' : ''}>${opt}</option>`).join('')}
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Tempo Médio (hh:mm:ss)</label>
-                                    <input
-                                        type="text"
-                                        value="${formData.avgTime}"
-                                        oninput="formData.avgTime = this.value;"
-                                        placeholder="01:00:00"
-                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                                        ${loading ? 'disabled' : ''}
-                                    />
-                                </div>
-                                ` : ''}
-                            </div>
-
-                            <div class="flex flex-col sm:flex-row gap-3 pt-4">
-                                <button
-                                    onclick="handleSubmit();"
-                                    class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-medium hover:shadow-lg transition-shadow disabled:opacity-50 text-sm"
-                                    ${loading ? 'disabled' : ''}
-                                >
-                                    ${loading ? 'Salvando...' : (editingId !== null ? 'Atualizar' : 'Adicionar')}
-                                </button>
-                                <button
-                                    onclick="resetForm(); render();"
-                                    class="sm:w-auto px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors disabled:opacity-50 text-sm"
-                                    ${loading ? 'disabled' : ''}
-                                >
-                                    Cancelar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    ` : ''}
-
-                    <!-- Items List -->
-                    <div class="space-y-4">
-                        ${loading && items.length === 0 ? `
-                        <div class="bg-white rounded-xl shadow-md p-12 text-center">
-                            <div class="text-6xl mb-4">⏳</div>
-                            <p class="text-gray-500 text-lg">Carregando dados do Google Sheets...</p>
-                        </div>
-                        ` : displayedItems.length === 0 ? `
-                        <div class="bg-white rounded-xl shadow-md p-12 text-center">
-                            <div class="text-6xl mb-4">${searchTerm ? '🔍' : '📚'}</div>
-                            <p class="text-gray-500 text-lg">
-                                ${searchTerm ? 'Nenhum resultado encontrado' : 'Nenhum item encontrado'}
-                            </p>
-                        </div>
-                        ` : displayedItems.map((item) => `
-                        <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-4 md:p-6">
-                            <div class="space-y-4">
-                                <div class="flex items-start gap-3">
-                                    <div class="text-3xl">${item.category === 'Livro' ? '📖' : '📺'}</div>
-                                    <div class="flex-1 min-w-0">
-                                        <h3 class="text-lg md:text-xl font-bold text-gray-800 break-words">${item.title}</h3>
-                                        ${item.author ? `<p class="text-gray-600 mt-1 text-sm">${item.author}</p>` : ''}
-                                    </div>
-                                </div>
-
-                                <div class="flex flex-wrap gap-2 text-xs md:text-sm">
-                                    <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full font-medium">
-                                        ${item.status}
-                                    </span>
-                                    ${item.rating ? `
-                                    <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full font-medium">
-                                        ${item.rating}
-                                    </span>
-                                    ` : ''}
-                                    ${item.date ? `<span class="text-gray-600">📅 ${formatDate(item.date)}</span>` : ''}
-                                    ${item.pages ? `<span class="text-gray-600">${item.pages} ${item.category === 'Livro' ? 'páginas' : 'episódios'}</span>` : ''}
-                                    ${item.country ? `<span class="text-gray-600">🌍 ${item.country}</span>` : ''}
-                                    ${item.avgTime ? `<span class="text-gray-600">⏱️ ${formatTime(item.avgTime)}</span>` : ''}
-                                </div>
-
-                                <div class="flex gap-2 pt-2">
-                                    <button
-                                        onclick='handleEdit(${item.id})'
-                                        class="flex-1 px-4 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors disabled:opacity-50"
-                                        ${loading ? 'disabled' : ''}
-                                    >
-                                        Editar
-                                    </button>
-                                    <button
-                                        onclick="handleDelete(${item.id})"
-                                        class="flex-1 px-4 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors disabled:opacity-50"
-                                        ${loading ? 'disabled' : ''}
-                                    >
-                                        Excluir
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        `).join('')}
-                        
-                        ${hasMore && displayedItems.length > 0 ? `
-                        <div class="flex justify-center py-6">
-                            <button
-                                onclick="render();"
-                                class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-lg font-medium hover:shadow-lg transition-shadow"
-                            >
-                                Carregar mais (${filteredItems.length - displayedItems.length} restantes)
-                            </button>
-                        </div>
-                        ` : ''}
-                        
-                        ${displayedItems.length > 0 && !hasMore ? `
-                        <div class="text-center py-6 text-gray-500 text-sm">
-                            Todos os itens foram carregados 📚
-                        </div>
-                        ` : ''}
-                    </div>
-                </div>
-            `;
-            
-            const input = document.getElementById('searchInput');
-            if (input && document.activeElement === input) {
-                const cursorPos = input.selectionStart;
-                input.value = searchInput;
-                input.setSelectionRange(cursorPos, cursorPos);
-            } else if (input) {
-                input.addEventListener('input', function(e) {
-                    searchInput = e.target.value;
-                });
-            }
-        }
-
-        checkSavedLogin();
-        
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                const swCode = `
-                    self.addEventListener('install', (e) => {
-                        e.waitUntil(
-                            caches.open('biblioteca-v1').then((cache) => {
-                                return cache.addAll(['./', './biblioteca.html']);
-                            })
-                        );
-                    });
-                    
-                    self.addEventListener('fetch', (e) => {
-                        e.respondWith(
-                            caches.match(e.request).then((response) => {
-                                return response || fetch(e.request);
-                            })
-                        );
-                    });
-                `;
-                
-                const blob = new Blob([swCode], { type: 'application/javascript' });
-                const swUrl = URL.createObjectURL(blob);
-                
-                navigator.serviceWorker.register(swUrl).catch(() => {});
-            });
-        }
-    </script>
-</body>
-</html>
                                     </div>
                                 </div>
                             </div>
@@ -964,7 +642,6 @@
             const hasMore = displayedItems.length < filteredItems.length;
 
             document.getElementById('app').innerHTML = `
-                <!-- Header -->
                 <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 shadow-lg">
                     <div class="max-w-6xl mx-auto flex justify-between items-center flex-wrap gap-4">
                         <div>
@@ -984,7 +661,6 @@
                     </div>
                 </div>
 
-                <!-- Stats -->
                 <div class="max-w-6xl mx-auto px-4 mt-6 mb-6">
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div class="bg-white rounded-xl p-4 shadow-md">
@@ -1007,7 +683,6 @@
                 </div>
 
                 <div class="max-w-6xl mx-auto px-4 pb-8">
-                    <!-- Controls -->
                     <div class="bg-white rounded-xl shadow-md p-4 mb-6">
                         <div class="space-y-3">
                             <div class="flex gap-2">
@@ -1054,46 +729,3 @@
                                 >
                                     📺 Séries
                                 </button>
-                            </div>
-
-                            <div class="flex gap-2 items-center overflow-x-auto pb-2">
-                                <span class="text-sm text-gray-600 whitespace-nowrap">Ordenar:</span>
-                                <select
-                                    onchange="sortBy = this.value; resetPagination(); render();"
-                                    class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 text-sm bg-white"
-                                >
-                                    <option value="date-desc" ${sortBy === 'date-desc' ? 'selected' : ''}>📅 Mais recente</option>
-                                    <option value="date-asc" ${sortBy === 'date-asc' ? 'selected' : ''}>📅 Mais antigo</option>
-                                    <option value="title-asc" ${sortBy === 'title-asc' ? 'selected' : ''}>🔤 A-Z</option>
-                                    <option value="title-desc" ${sortBy === 'title-desc' ? 'selected' : ''}>🔤 Z-A</option>
-                                    <option value="category" ${sortBy === 'category' ? 'selected' : ''}>📂 Categoria</option>
-                                    <option value="status" ${sortBy === 'status' ? 'selected' : ''}>✅ Status</option>
-                                    <option value="rating" ${sortBy === 'rating' ? 'selected' : ''}>⭐ Avaliação</option>
-                                </select>
-                            </div>
-
-                            <div class="flex gap-2 overflow-x-auto pb-2">
-                                <button
-                                    onclick="showCharts = !showCharts; render();"
-                                    class="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow text-sm whitespace-nowrap"
-                                    ${loading ? 'disabled' : ''}
-                                >
-                                    📊 Gráficos
-                                </button>
-                                <button
-                                    onclick="showForm = !showForm; render();"
-                                    class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow text-sm whitespace-nowrap"
-                                    ${loading ? 'disabled' : ''}
-                                >
-                                    ➕ Adicionar
-                                </button>
-                                <button
-                                    onclick="loadData();"
-                                    class="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow text-sm whitespace-nowrap"
-                                    ${loading ? 'disabled' : ''}
-                                >
-                                    🔄 Atualizar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
