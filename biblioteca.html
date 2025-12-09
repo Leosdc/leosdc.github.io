@@ -35,6 +35,9 @@
         let searchTerm = '';
         let searchInput = '';
         let editingId = null;
+        let showCharts = false;
+        let chartPeriod = 'monthly';
+        let chartType = 'all';
         let loading = false;
         let formData = {
             title: '',
@@ -308,6 +311,100 @@
             };
         }
 
+        function getChartData() {
+            const filteredItems = items.filter(item => {
+                if (chartType === 'books') return item.category === 'Livro';
+                if (chartType === 'series') return item.category === 'Série';
+                return true;
+            }).filter(item => item.status === 'Lido' || item.status === 'Assistido');
+
+            const dataMap = {};
+
+            filteredItems.forEach(item => {
+                if (!item.date) return;
+                
+                const parts = item.date.split('/');
+                if (parts.length !== 3) return;
+                
+                const day = parts[0];
+                const month = parts[1];
+                const year = parts[2];
+
+                let key;
+                if (chartPeriod === 'daily') {
+                    key = `${day}/${month}/${year}`;
+                } else if (chartPeriod === 'monthly') {
+                    key = `${month}/${year}`;
+                } else {
+                    key = year;
+                }
+
+                dataMap[key] = (dataMap[key] || 0) + 1;
+            });
+
+            const sortedKeys = Object.keys(dataMap).sort((a, b) => {
+                const parseDate = (str) => {
+                    const parts = str.split('/');
+                    if (chartPeriod === 'daily') {
+                        return new Date(parts[2], parts[1] - 1, parts[0]);
+                    } else if (chartPeriod === 'monthly') {
+                        return new Date(parts[1], parts[0] - 1);
+                    } else {
+                        return new Date(parts[0]);
+                    }
+                };
+                return parseDate(a) - parseDate(b);
+            });
+
+            return sortedKeys.map(key => ({
+                label: key,
+                value: dataMap[key]
+            }));
+        }
+
+        function renderChart() {
+            const data = getChartData();
+            if (data.length === 0) {
+                return '<div class="text-center text-gray-500 py-12">Nenhum dado disponível para o período selecionado</div>';
+            }
+
+            const maxValue = Math.max(...data.map(d => d.value));
+            const chartHeight = 300;
+
+            return `
+                <div class="space-y-4">
+                    ${data.map(item => {
+                        const height = (item.value / maxValue) * chartHeight;
+                        const percentage = (item.value / maxValue) * 100;
+                        return `
+                            <div class="flex items-end gap-3">
+                                <div class="w-32 text-sm text-gray-600 text-right">${item.label}</div>
+                                <div class="flex-1 flex items-center gap-3">
+                                    <div class="flex-1 bg-gray-100 rounded-full h-8 relative overflow-hidden">
+                                        <div 
+                                            class="bg-gradient-to-r from-purple-500 to-pink-500 h-full rounded-full transition-all duration-500 flex items-center justify-end px-3"
+                                            style="width: ${percentage}%"
+                                        >
+                                            <span class="text-white font-bold text-sm">${item.value}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function getStats() {
+            return {
+                total: items.length,
+                books: items.filter(i => i.category === 'Livro').length,
+                series: items.filter(i => i.category === 'Série').length,
+                completed: items.filter(i => i.status === 'Lido' || i.status === 'Assistido').length
+            };
+        }
+
         function render() {
             const stats = getStats();
             const filteredItems = getFilteredItems();
@@ -393,6 +490,13 @@
                                     📺 Séries
                                 </button>
                                 <button
+                                    onclick="showCharts = !showCharts; render();"
+                                    class="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-6 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow"
+                                    ${loading ? 'disabled' : ''}
+                                >
+                                    📊 ${showCharts ? 'Ocultar' : 'Ver'} Gráficos
+                                </button>
+                                <button
                                     onclick="showForm = !showForm; render();"
                                     class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow"
                                     ${loading ? 'disabled' : ''}
@@ -409,6 +513,61 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Charts Panel -->
+                    ${showCharts ? `
+                    <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                        <h2 class="text-2xl font-bold mb-4 text-gray-800">📊 Estatísticas</h2>
+                        
+                        <div class="flex flex-wrap gap-3 mb-6">
+                            <div class="flex gap-2 bg-gray-100 rounded-lg p-1">
+                                <button
+                                    onclick="chartPeriod = 'daily'; render();"
+                                    class="px-4 py-2 rounded-lg font-medium transition-colors ${chartPeriod === 'daily' ? 'bg-white shadow-sm' : ''}"
+                                >
+                                    Diário
+                                </button>
+                                <button
+                                    onclick="chartPeriod = 'monthly'; render();"
+                                    class="px-4 py-2 rounded-lg font-medium transition-colors ${chartPeriod === 'monthly' ? 'bg-white shadow-sm' : ''}"
+                                >
+                                    Mensal
+                                </button>
+                                <button
+                                    onclick="chartPeriod = 'yearly'; render();"
+                                    class="px-4 py-2 rounded-lg font-medium transition-colors ${chartPeriod === 'yearly' ? 'bg-white shadow-sm' : ''}"
+                                >
+                                    Anual
+                                </button>
+                            </div>
+
+                            <div class="flex gap-2 bg-gray-100 rounded-lg p-1">
+                                <button
+                                    onclick="chartType = 'all'; render();"
+                                    class="px-4 py-2 rounded-lg font-medium transition-colors ${chartType === 'all' ? 'bg-white shadow-sm' : ''}"
+                                >
+                                    Todos
+                                </button>
+                                <button
+                                    onclick="chartType = 'books'; render();"
+                                    class="px-4 py-2 rounded-lg font-medium transition-colors ${chartType === 'books' ? 'bg-white shadow-sm' : ''}"
+                                >
+                                    📖 Livros
+                                </button>
+                                <button
+                                    onclick="chartType = 'series'; render();"
+                                    class="px-4 py-2 rounded-lg font-medium transition-colors ${chartType === 'series' ? 'bg-white shadow-sm' : ''}"
+                                >
+                                    📺 Séries
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="mt-6">
+                            ${renderChart()}
+                        </div>
+                    </div>
+                    ` : ''}
 
                     <!-- Form -->
                     ${showForm ? `
