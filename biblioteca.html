@@ -67,6 +67,41 @@
             }, 3000);
         }
 
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            // Se já está no formato dd/mm/yyyy, retorna
+            if (dateStr.includes('/')) return dateStr;
+            // Se está no formato ISO (yyyy-mm-dd), converte
+            const parts = dateStr.split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            // Se está no formato de timestamp do Google Sheets
+            try {
+                const date = new Date(dateStr);
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                return `${day}/${month}/${year}`;
+            } catch {
+                return dateStr;
+            }
+        }
+
+        function formatTime(timeStr) {
+            if (!timeStr) return '';
+            // Remove a parte da data se existir
+            if (timeStr.includes('T')) {
+                timeStr = timeStr.split('T')[1];
+            }
+            // Pega apenas HH:MM:SS
+            const parts = timeStr.split(':');
+            if (parts.length >= 3) {
+                return `${parts[0]}:${parts[1]}:${parts[2].substring(0, 2)}`;
+            }
+            return timeStr;
+        }
+
         async function loadData() {
             loading = true;
             render();
@@ -83,7 +118,9 @@
                     date: item['Data'] || item.Data || '',
                     category: item['Categoria'] || item.Categoria || 'Livro',
                     country: item['País'] || item.País || '',
-                    avgTime: item['Tempo Médio'] || item['Tempo médio'] || ''
+                    avgTime: item['Tempo Médio'] || item['Tempo médio'] || '',
+                    rawDate: item['Data'] || item.Data || '',
+                    rawAvgTime: item['Tempo Médio'] || item['Tempo médio'] || ''
                 })).filter(item => item.title);
             } catch (error) {
                 console.error('Erro ao carregar dados:', error);
@@ -127,13 +164,20 @@
                 return;
             }
 
+            // Converte a data de yyyy-mm-dd para dd/mm/yyyy
+            let finalDate = formData.date;
+            if (formData.date && formData.date.includes('-')) {
+                const parts = formData.date.split('-');
+                finalDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+
             const itemData = {
                 title: formData.title,
                 author: formData.author,
                 pages: formData.pages,
                 status: formData.status,
                 rating: formData.rating,
-                date: formData.date || new Date().toLocaleDateString('pt-BR'),
+                date: finalDate || new Date().toLocaleDateString('pt-BR'),
                 category: formData.category,
                 country: formData.country,
                 avgTime: formData.avgTime
@@ -166,16 +210,26 @@
         function handleEdit(index) {
             const item = items[index];
             editingId = index;
+            
+            // Formata a data para o campo de input
+            let formattedDate = '';
+            if (item.date) {
+                const parts = item.date.split('/');
+                if (parts.length === 3) {
+                    formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                }
+            }
+            
             formData = {
                 title: item.title,
                 author: item.author || '',
                 pages: item.pages.toString().replace(' Páginas', '').replace(' Episódios', ''),
                 status: item.status,
                 rating: item.rating,
-                date: item.date,
+                date: formattedDate,
                 category: item.category,
                 country: item.country || '',
-                avgTime: item.avgTime || ''
+                avgTime: formatTime(item.avgTime) || ''
             };
             showForm = true;
             render();
@@ -385,18 +439,8 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Data</label>
                                     <input
                                         type="date"
-                                        id="dateInput"
-                                        value="${formData.date ? (() => {
-                                            const parts = formData.date.split('/');
-                                            if (parts.length === 3) {
-                                                const day = parts[0].padStart(2, '0');
-                                                const month = parts[1].padStart(2, '0');
-                                                const year = parts[2];
-                                                return year + '-' + month + '-' + day;
-                                            }
-                                            return '';
-                                        })() : ''}"
-                                        onchange="if(this.value) { const parts = this.value.split('-'); formData.date = parts[2] + '/' + parts[1] + '/' + parts[0]; }"
+                                        value="${formData.date}"
+                                        onchange="formData.date = this.value;"
                                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                                         ${loading ? 'disabled' : ''}
                                     />
@@ -484,10 +528,10 @@
                                             ${item.rating}
                                         </span>
                                         ` : ''}
-                                        ${item.date ? `<span class="text-gray-600">📅 ${item.date}</span>` : ''}
+                                        ${item.date ? `<span class="text-gray-600">📅 ${formatDate(item.date)}</span>` : ''}
                                         ${item.pages ? `<span class="text-gray-600">${item.pages}</span>` : ''}
                                         ${item.country ? `<span class="text-gray-600">🌍 ${item.country}</span>` : ''}
-                                        ${item.avgTime ? `<span class="text-gray-600">⏱️ ${item.avgTime}</span>` : ''}
+                                        ${item.avgTime ? `<span class="text-gray-600">⏱️ ${formatTime(item.avgTime)}</span>` : ''}
                                     </div>
                                 </div>
 
