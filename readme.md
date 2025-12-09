@@ -196,7 +196,7 @@ function doPost(e) {
 1. Abra o arquivo `biblioteca.html`
 2. Localize esta linha (próximo ao início do código JavaScript):
 ```javascript
-const API_URL = 'https://script.google.com/macros/s/AKfycbzYO5iizLJ-i-NKetEqIHTpphjBY4zo-NV4F5DOmbJL8MGbRm2G_O95G1Wk8UUNj2sP/exec';
+const API_URL = 'https://script.google.com/macros/s/xxx/exec';
 ```
 3. **SUBSTITUA** pela URL que você copiou do Apps Script
 4. Salve o arquivo
