@@ -767,15 +767,10 @@
                                     onclick="showSortMenu = !showSortMenu; render();"
                                     class="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow text-sm whitespace-nowrap"
                                 >
-                                    <div class="flex-1 relative">
-                                <button
-                                    onclick="showSortMenu = !showSortMenu; render();"
-                                    class="w-full bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow text-sm whitespace-nowrap"
-                                >
                                     🔽 Ordenar
                                 </button>
                                 ${showSortMenu ? `
-                                <div class="bg-white border rounded-lg shadow-lg p-2 absolute top-full right-0 mt-1 z-50 w-48">
+                                <div class="bg-white border rounded-lg shadow-lg p-2 absolute mt-2 z-50">
                                     <button onclick="sortBy='title-asc'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-gray-100">Título A–Z</button>
                                     <button onclick="sortBy='title-desc'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-gray-100">Título Z–A</button>
                                     <button onclick="sortBy='date-desc'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-gray-100">Mais recentes</button>
@@ -785,7 +780,6 @@
                                     <button onclick="sortBy='rating'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-gray-100">Avaliação</button>
                                 </div>
                                 ` : ''}
-                            </div>
 
                             </div>
                         </div>
