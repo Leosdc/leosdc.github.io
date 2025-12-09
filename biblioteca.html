@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mundo da Alice</title>
+    <title>📚 Mundo da Alice</title>
     <meta name="description" content="App da princesa Ana Alice para organizar livros e séries">
     <meta name="theme-color" content="#9333ea">
     
@@ -43,6 +43,8 @@
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbzYO5iizLJ-i-NKetEqIHTpphjBY4zo-NV4F5DOmbJL8MGbRm2G_O95G1Wk8UUNj2sP/exec';
         
+        let currentUser = null;
+        let isLoginMode = true;
         let items = [];
         let showForm = false;
         let filter = 'all';
@@ -53,6 +55,10 @@
         let chartPeriod = 'monthly';
         let chartType = 'all';
         let loading = false;
+        let loginData = {
+            username: '',
+            password: ''
+        };
         let formData = {
             title: '',
             author: '',
@@ -70,6 +76,16 @@
         const categoryOptions = ['Livro', 'Série'];
         const countryOptions = ['Brasil', 'Coreia do Sul', 'China', 'Japão', 'Taiwan', 'Tailândia', 'Estados Unidos', 'Outro'];
 
+        function checkSavedLogin() {
+            const saved = localStorage.getItem('mundoAliceUser');
+            if (saved) {
+                currentUser = JSON.parse(saved);
+                loadData();
+            } else {
+                renderLogin();
+            }
+        }
+
         function showNotification(message, type = 'success') {
             const notification = document.createElement('div');
             notification.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg transform transition-all duration-300 ${
@@ -85,6 +101,88 @@
             }, 3000);
         }
 
+        async function handleLogin() {
+            if (!loginData.username || !loginData.password) {
+                showNotification('Preencha usuário e senha!', 'error');
+                return;
+            }
+
+            loading = true;
+            renderLogin();
+
+            try {
+                const response = await fetch(`${API_URL}?action=checkUser&username=${encodeURIComponent(loginData.username)}&password=${encodeURIComponent(loginData.password)}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    currentUser = { username: loginData.username };
+                    localStorage.setItem('mundoAliceUser', JSON.stringify(currentUser));
+                    showNotification('✨ Login realizado com sucesso!');
+                    loadData();
+                } else {
+                    showNotification('Usuário ou senha incorretos!', 'error');
+                    loading = false;
+                    renderLogin();
+                }
+            } catch (error) {
+                console.error('Erro no login:', error);
+                showNotification('Erro ao fazer login. Tente novamente.', 'error');
+                loading = false;
+                renderLogin();
+            }
+        }
+
+        async function handleRegister() {
+            if (!loginData.username || !loginData.password) {
+                showNotification('Preencha usuário e senha!', 'error');
+                return;
+            }
+
+            if (loginData.password.length < 4) {
+                showNotification('A senha deve ter no mínimo 4 caracteres!', 'error');
+                return;
+            }
+
+            loading = true;
+            renderLogin();
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'registerUser',
+                        username: loginData.username,
+                        password: loginData.password
+                    })
+                });
+
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                currentUser = { username: loginData.username };
+                localStorage.setItem('mundoAliceUser', JSON.stringify(currentUser));
+                showNotification('✨ Cadastro realizado com sucesso!');
+                loadData();
+            } catch (error) {
+                console.error('Erro no cadastro:', error);
+                showNotification('Erro ao cadastrar. Tente novamente.', 'error');
+                loading = false;
+                renderLogin();
+            }
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            localStorage.removeItem('mundoAliceUser');
+            items = [];
+            loginData = { username: '', password: '' };
+            showNotification('Você saiu da conta!');
+            renderLogin();
+        }
+
         function performSearch() {
             searchTerm = searchInput;
             render();
@@ -93,21 +191,17 @@
         function formatDate(dateStr) {
             if (!dateStr) return '';
             
-            // Se já está no formato dd/mm/yyyy, retorna
             if (dateStr.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
                 return dateStr;
             }
             
-            // Remove a parte de timezone se existir (ex: "000Z/12/2025")
             if (dateStr.includes('000Z')) {
                 const parts = dateStr.split('/');
                 if (parts.length === 3) {
-                    // Pega apenas a parte da data dd/mm/yyyy
                     return `${parts[1]}/${parts[2]}`;
                 }
             }
             
-            // Tenta converter de timestamp ISO
             try {
                 const date = new Date(dateStr);
                 if (!isNaN(date.getTime())) {
@@ -126,25 +220,20 @@
         function formatTime(timeStr) {
             if (!timeStr) return '';
             
-            // Se já está no formato hh:mm:ss, retorna
             if (timeStr.match(/^\d{2}:\d{2}:\d{2}$/)) {
                 return timeStr;
             }
             
-            // Remove tudo antes de "T" se for ISO timestamp
             if (timeStr.includes('T')) {
                 timeStr = timeStr.split('T')[1];
             }
             
-            // Remove a parte ".000Z" se existir
             if (timeStr.includes('.')) {
                 timeStr = timeStr.split('.')[0];
             }
             
-            // Remove "Z" no final se existir
             timeStr = timeStr.replace('Z', '');
             
-            // Pega apenas HH:MM:SS
             const parts = timeStr.split(':');
             if (parts.length >= 3) {
                 const hh = parts[0].padStart(2, '0');
@@ -157,10 +246,12 @@
         }
 
         async function loadData() {
+            if (!currentUser) return;
+            
             loading = true;
             render();
             try {
-                const response = await fetch(API_URL);
+                const response = await fetch(`${API_URL}?username=${encodeURIComponent(currentUser.username)}`);
                 const data = await response.json();
                 items = data.map((item, index) => ({
                     id: index,
@@ -172,9 +263,7 @@
                     date: item['Data'] || item.Data || '',
                     category: item['Categoria'] || item.Categoria || 'Livro',
                     country: item['País'] || item.País || '',
-                    avgTime: item['Tempo Médio'] || item['Tempo médio'] || '',
-                    rawDate: item['Data'] || item.Data || '',
-                    rawAvgTime: item['Tempo Médio'] || item['Tempo médio'] || ''
+                    avgTime: item['Tempo Médio'] || item['Tempo médio'] || ''
                 })).filter(item => item.title);
             } catch (error) {
                 console.error('Erro ao carregar dados:', error);
@@ -196,6 +285,7 @@
                     },
                     body: JSON.stringify({
                         action: action,
+                        username: currentUser.username,
                         ...data
                     })
                 });
@@ -218,7 +308,6 @@
                 return;
             }
 
-            // Converte a data de yyyy-mm-dd para dd/mm/yyyy
             let finalDate = formData.date;
             if (formData.date && formData.date.includes('-')) {
                 const parts = formData.date.split('-');
@@ -265,7 +354,6 @@
             const item = items[index];
             editingId = index;
             
-            // Formata a data para o campo de input
             let formattedDate = '';
             if (item.date) {
                 const parts = item.date.split('/');
@@ -277,7 +365,7 @@
             formData = {
                 title: item.title,
                 author: item.author || '',
-                pages: item.pages.toString().replace(' Páginas', '').replace(' Episódios', ''),
+                pages: item.pages.toString(),
                 status: item.status,
                 rating: item.rating,
                 date: formattedDate,
@@ -383,12 +471,10 @@
             }
 
             const maxValue = Math.max(...data.map(d => d.value));
-            const chartHeight = 300;
 
             return `
                 <div class="space-y-4">
                     ${data.map(item => {
-                        const height = (item.value / maxValue) * chartHeight;
                         const percentage = (item.value / maxValue) * 100;
                         return `
                             <div class="flex items-end gap-3">
@@ -410,26 +496,106 @@
             `;
         }
 
-        function getStats() {
-            return {
-                total: items.length,
-                books: items.filter(i => i.category === 'Livro').length,
-                series: items.filter(i => i.category === 'Série').length,
-                completed: items.filter(i => i.status === 'Lido' || i.status === 'Assistido').length
-            };
+        function renderLogin() {
+            document.getElementById('app').innerHTML = `
+                <div class="min-h-screen flex items-center justify-center p-4">
+                    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+                        <div class="text-center mb-8">
+                            <div class="text-6xl mb-4">📚</div>
+                            <h1 class="text-3xl font-bold text-gray-800 mb-2">Mundo da Alice</h1>
+                            <p class="text-gray-600">App da princesa Ana Alice! ❤️</p>
+                        </div>
+
+                        <div class="mb-6">
+                            <div class="flex gap-2 bg-gray-100 rounded-lg p-1 mb-6">
+                                <button
+                                    onclick="isLoginMode = true; renderLogin();"
+                                    class="flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${isLoginMode ? 'bg-white shadow-sm' : ''}"
+                                >
+                                    Entrar
+                                </button>
+                                <button
+                                    onclick="isLoginMode = false; renderLogin();"
+                                    class="flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${!isLoginMode ? 'bg-white shadow-sm' : ''}"
+                                >
+                                    Cadastrar
+                                </button>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Usuário</label>
+                                    <input
+                                        type="text"
+                                        value="${loginData.username}"
+                                        oninput="loginData.username = this.value;"
+                                        placeholder="Digite seu usuário"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        ${loading ? 'disabled' : ''}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+                                    <input
+                                        type="password"
+                                        value="${loginData.password}"
+                                        oninput="loginData.password = this.value;"
+                                        onkeypress="if(event.key === 'Enter') ${isLoginMode ? 'handleLogin()' : 'handleRegister()'};"
+                                        placeholder="Digite sua senha"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        ${loading ? 'disabled' : ''}
+                                    />
+                                </div>
+
+                                <button
+                                    onclick="${isLoginMode ? 'handleLogin()' : 'handleRegister()'};"
+                                    class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-medium hover:shadow-lg transition-shadow disabled:opacity-50"
+                                    ${loading ? 'disabled' : ''}
+                                >
+                                    ${loading ? 'Aguarde...' : (isLoginMode ? '🔐 Entrar' : '✨ Criar Conta')}
+                                </button>
+                            </div>
+                        </div>
+
+                        ${!isLoginMode ? `
+                        <div class="text-center text-sm text-gray-500 mt-4">
+                            <p>💡 Escolha um usuário e senha fáceis de lembrar!</p>
+                            <p class="mt-1">Mínimo 4 caracteres na senha.</p>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
         }
 
         function render() {
+            if (!currentUser) {
+                renderLogin();
+                return;
+            }
+
             const stats = getStats();
             const filteredItems = getFilteredItems();
 
             document.getElementById('app').innerHTML = `
                 <!-- Header -->
                 <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 shadow-lg">
-                    <div class="max-w-6xl mx-auto">
-                        <h1 class="text-3xl font-bold mb-2">Mundo da Alice</h1>
-                        <p class="text-purple-100">App da princesa Ana Alice! ❤️</p>
-                        ${loading ? '<p class="text-purple-200 mt-2 flex items-center gap-2"><span class="loading"></span> Carregando...</p>' : ''}
+                    <div class="max-w-6xl mx-auto flex justify-between items-center flex-wrap gap-4">
+                        <div>
+                            <h1 class="text-3xl font-bold mb-2">📚 Mundo da Alice</h1>
+                            <p class="text-purple-100">App da princesa Ana Alice! ❤️</p>
+                            ${loading ? '<p class="text-purple-200 mt-2 flex items-center gap-2"><span class="loading"></span> Carregando...</p>' : ''}
+                        </div>
+                        <div class="text-right">
+                            <p class="text-purple-100 text-sm mb-2">👤 ${currentUser.username}</p>
+                            <button
+                                onclick="handleLogout();"
+                                class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                            >
+                                Sair
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -734,7 +900,7 @@
                                 ${searchTerm ? 'Nenhum resultado encontrado' : 'Nenhum item encontrado'}
                             </p>
                         </div>
-                        ` : filteredItems.map((item, index) => `
+                        ` : filteredItems.map((item) => `
                         <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-6">
                             <div class="flex items-start justify-between flex-wrap gap-4">
                                 <div class="flex-1 min-w-0">
@@ -785,7 +951,6 @@
                 </div>
             `;
             
-            // Atualiza o valor do input sem perder o foco
             const input = document.getElementById('searchInput');
             if (input && document.activeElement === input) {
                 const cursorPos = input.selectionStart;
@@ -798,9 +963,8 @@
             }
         }
 
-        loadData();
+        checkSavedLogin();
         
-        // Registra Service Worker para PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 const swCode = `
@@ -824,9 +988,7 @@
                 const blob = new Blob([swCode], { type: 'application/javascript' });
                 const swUrl = URL.createObjectURL(blob);
                 
-                navigator.serviceWorker.register(swUrl).catch(() => {
-                    // Service Worker opcional, não bloqueia o app
-                });
+                navigator.serviceWorker.register(swUrl).catch(() => {});
             });
         }
     </script>
