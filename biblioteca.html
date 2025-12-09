@@ -344,10 +344,9 @@
                         <div class="flex flex-col md:flex-row gap-4">
                             <input
                                 type="text"
+                                id="searchInput"
                                 placeholder="🔍 Buscar título ou autor..."
                                 value="${searchTerm}"
-                                oninput="searchTerm = this.value;"
-                                onkeyup="render();"
                                 class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                             />
                             
@@ -589,6 +588,15 @@
                     </div>
                 </div>
             `;
+            
+            // Adiciona o evento de busca depois de renderizar
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', function(e) {
+                    searchTerm = e.target.value;
+                    render();
+                });
+            }
         }
 
         loadData();
