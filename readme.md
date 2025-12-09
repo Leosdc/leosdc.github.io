@@ -339,7 +339,7 @@ O app pode ser instalado como aplicativo no celular ou computador:
 
 ## 📄 Licença
 
-Este projeto foi criado especialmente para a princesa Ana Alice! ❤️
+Este projeto foi criado especialmente para a minha linda esposa Ana Alice! ❤️
 
 ---
 
