@@ -58,6 +58,8 @@
         let chartPeriod = 'monthly';
         let chartType = 'all';
         let loading = false;
+        let sortBy = 'date-desc'; // date-desc, date-asc, title-asc, title-desc, category, status
+        let showSortMenu = false;
         let loginData = {
             username: '',
             password: ''
@@ -414,6 +416,60 @@
             };
             showForm = false;
             editingId = null;
+        }
+
+        function getFilteredItems() {
+            let filtered = items.filter(item => {
+                const matchesFilter = filter === 'all' || 
+                                     (filter === 'books' && item.category === 'Livro') ||
+                                     (filter === 'series' && item.category === 'Série');
+                const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                     (item.author && item.author.toLowerCase().includes(searchTerm.toLowerCase()));
+                return matchesFilter && matchesSearch;
+            });
+
+            // Aplicar ordenação
+            filtered.sort((a, b) => {
+                switch(sortBy) {
+                    case 'title-asc':
+                        return a.title.localeCompare(b.title);
+                    case 'title-desc':
+                        return b.title.localeCompare(a.title);
+                    case 'date-asc':
+                        return compareDates(a.date, b.date);
+                    case 'date-desc':
+                        return compareDates(b.date, a.date);
+                    case 'category':
+                        return a.category.localeCompare(b.category);
+                    case 'status':
+                        const statusOrder = ['Quero ler/assistir', 'Lido', 'Assistido', 'Desisti'];
+                        return statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status);
+                    case 'rating':
+                        const ratingOrder = ['Maravilhoso 😍', 'Muito bom 😊', 'Bom 🙂', 'Mais ou menos 🤨', 'Ruim 🙁', 'Péssimo 😒'];
+                        const aRating = a.rating ? ratingOrder.indexOf(a.rating) : 999;
+                        const bRating = b.rating ? ratingOrder.indexOf(b.rating) : 999;
+                        return aRating - bRating;
+                    default:
+                        return 0;
+                }
+            });
+
+            return filtered;
+        }
+
+        function compareDates(dateA, dateB) {
+            if (!dateA) return 1;
+            if (!dateB) return -1;
+            
+            const parseDate = (str) => {
+                const parts = str.split('/');
+                if (parts.length === 3) {
+                    return new Date(parts[2], parts[1] - 1, parts[0]);
+                }
+                return new Date(0);
+            };
+            
+            return parseDate(dateA) - parseDate(dateB);
         }
 
         function getFilteredItems() {
