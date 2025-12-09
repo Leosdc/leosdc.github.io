@@ -9,17 +9,32 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
         }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-purple-50 to-pink-50 min-h-screen">
     <div id="app"></div>
 
     <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzYO5iizLJ-i-NKetEqIHTpphjBY4zo-NV4F5DOmbJL8MGbRm2G_O95G1Wk8UUNj2sP/exec';
+        
         let items = [];
         let showForm = false;
         let filter = 'all';
         let searchTerm = '';
         let editingId = null;
+        let loading = false;
         let formData = {
             title: '',
             author: '',
@@ -37,56 +52,105 @@
         const categoryOptions = ['Livro', 'Série'];
         const countryOptions = ['Brasil', 'Coreia do Sul', 'China', 'Japão', 'Taiwan', 'Tailândia', 'Estados Unidos', 'Outro'];
 
-        function loadData() {
-            const saved = localStorage.getItem('biblioteca-items');
-            if (saved) {
-                items = JSON.parse(saved);
+        async function loadData() {
+            loading = true;
+            render();
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                items = data.map((item, index) => ({
+                    id: index,
+                    title: item['Título'] || item.Título || '',
+                    author: item['Autor'] || item.Autor || '',
+                    pages: item['Páginas/Episódios'] || item['Nº Páginas | Episódios'] || '',
+                    status: item['Status'] || item.Status || '',
+                    rating: item['Avaliação'] || item.Avaliação || '',
+                    date: item['Data'] || item.Data || '',
+                    category: item['Categoria'] || item.Categoria || 'Livro',
+                    country: item['País'] || item.País || '',
+                    avgTime: item['Tempo Médio'] || item['Tempo médio'] || ''
+                })).filter(item => item.title);
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                alert('Erro ao carregar dados do Google Sheets');
+            }
+            loading = false;
+            render();
+        }
+
+        async function saveToSheet(action, data) {
+            loading = true;
+            render();
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: action,
+                        ...data
+                    })
+                });
+                
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                await loadData();
+                return true;
+            } catch (error) {
+                console.error('Erro ao salvar:', error);
+                alert('Erro ao salvar no Google Sheets');
+                loading = false;
+                render();
+                return false;
             }
         }
 
-        function saveData() {
-            localStorage.setItem('biblioteca-items', JSON.stringify(items));
-        }
-
-        function handleSubmit() {
+        async function handleSubmit() {
             if (!formData.title) {
                 alert('O título é obrigatório');
                 return;
             }
 
-            const newItem = {
-                id: editingId || Date.now(),
-                ...formData,
-                pages: formData.category === 'Livro' ? `${formData.pages} Páginas` : `${formData.pages} Episódios`,
-                avgTime: formData.avgTime || (formData.category === 'Série' ? '01:00:00' : ''),
-                date: formData.date || new Date().toLocaleDateString('pt-BR')
+            const itemData = {
+                title: formData.title,
+                author: formData.author,
+                pages: formData.pages,
+                status: formData.status,
+                rating: formData.rating,
+                date: formData.date || new Date().toLocaleDateString('pt-BR'),
+                category: formData.category,
+                country: formData.country,
+                avgTime: formData.avgTime
             };
 
-            if (editingId) {
-                items = items.map(item => item.id === editingId ? newItem : item);
+            if (editingId !== null) {
+                const oldItem = items[editingId];
+                await saveToSheet('update', {
+                    oldTitle: oldItem.title,
+                    ...itemData
+                });
             } else {
-                items.push(newItem);
+                await saveToSheet('add', itemData);
             }
 
-            saveData();
             resetForm();
-            render();
         }
 
-        function handleDelete(id) {
+        async function handleDelete(index) {
             if (confirm('Deseja realmente excluir este item?')) {
-                items = items.filter(item => item.id !== id);
-                saveData();
-                render();
+                const item = items[index];
+                await saveToSheet('delete', { title: item.title });
             }
         }
 
-        function handleEdit(item) {
-            editingId = item.id;
+        function handleEdit(index) {
+            const item = items[index];
+            editingId = index;
             formData = {
                 title: item.title,
                 author: item.author || '',
-                pages: item.pages.replace(' Páginas', '').replace(' Episódios', ''),
+                pages: item.pages.toString().replace(' Páginas', '').replace(' Episódios', ''),
                 status: item.status,
                 rating: item.rating,
                 date: item.date,
@@ -144,6 +208,7 @@
                     <div class="max-w-6xl mx-auto">
                         <h1 class="text-3xl font-bold mb-2">📚 Minha Biblioteca</h1>
                         <p class="text-purple-100">Organize seus livros e séries favoritas</p>
+                        ${loading ? '<p class="text-purple-200 mt-2 flex items-center gap-2"><span class="loading"></span> Carregando...</p>' : ''}
                     </div>
                 </div>
 
@@ -177,34 +242,42 @@
                                 type="text"
                                 placeholder="🔍 Buscar título ou autor..."
                                 value="${searchTerm}"
-                                onchange="searchTerm = this.value; render();"
+                                oninput="searchTerm = this.value; render();"
                                 class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                             />
                             
                             <div class="flex gap-2 flex-wrap">
                                 <button
                                     onclick="filter = 'all'; render();"
-                                    class="px-4 py-2 rounded-lg font-medium ${filter === 'all' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700'}"
+                                    class="px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'all' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700'}"
                                 >
                                     Todos
                                 </button>
                                 <button
                                     onclick="filter = 'books'; render();"
-                                    class="px-4 py-2 rounded-lg font-medium ${filter === 'books' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}"
+                                    class="px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'books' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}"
                                 >
                                     📖 Livros
                                 </button>
                                 <button
                                     onclick="filter = 'series'; render();"
-                                    class="px-4 py-2 rounded-lg font-medium ${filter === 'series' ? 'bg-pink-600 text-white' : 'bg-gray-100 text-gray-700'}"
+                                    class="px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'series' ? 'bg-pink-600 text-white' : 'bg-gray-100 text-gray-700'}"
                                 >
                                     📺 Séries
                                 </button>
                                 <button
                                     onclick="showForm = !showForm; render();"
-                                    class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-lg font-medium"
+                                    class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow"
+                                    ${loading ? 'disabled' : ''}
                                 >
                                     ➕ Adicionar
+                                </button>
+                                <button
+                                    onclick="loadData();"
+                                    class="bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow"
+                                    ${loading ? 'disabled' : ''}
+                                >
+                                    🔄 Atualizar
                                 </button>
                             </div>
                         </div>
@@ -214,7 +287,7 @@
                     ${showForm ? `
                     <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
                         <h2 class="text-2xl font-bold mb-4 text-gray-800">
-                            ${editingId ? 'Editar Item' : 'Adicionar Novo Item'}
+                            ${editingId !== null ? 'Editar Item' : 'Adicionar Novo Item'}
                         </h2>
                         <div class="space-y-4">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -223,6 +296,7 @@
                                     <select
                                         onchange="formData.category = this.value; render();"
                                         class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                        ${loading ? 'disabled' : ''}
                                     >
                                         ${categoryOptions.map(opt => `<option value="${opt}" ${formData.category === opt ? 'selected' : ''}>${opt}</option>`).join('')}
                                     </select>
@@ -233,6 +307,7 @@
                                     <select
                                         onchange="formData.status = this.value;"
                                         class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                        ${loading ? 'disabled' : ''}
                                     >
                                         ${statusOptions.map(opt => `<option value="${opt}" ${formData.status === opt ? 'selected' : ''}>${opt}</option>`).join('')}
                                     </select>
@@ -243,8 +318,9 @@
                                     <input
                                         type="text"
                                         value="${formData.title}"
-                                        onchange="formData.title = this.value;"
+                                        oninput="formData.title = this.value;"
                                         class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                        ${loading ? 'disabled' : ''}
                                     />
                                 </div>
 
@@ -254,8 +330,9 @@
                                     <input
                                         type="text"
                                         value="${formData.author}"
-                                        onchange="formData.author = this.value;"
+                                        oninput="formData.author = this.value;"
                                         class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                        ${loading ? 'disabled' : ''}
                                     />
                                 </div>
                                 ` : ''}
@@ -267,8 +344,9 @@
                                     <input
                                         type="number"
                                         value="${formData.pages}"
-                                        onchange="formData.pages = this.value;"
+                                        oninput="formData.pages = this.value;"
                                         class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                        ${loading ? 'disabled' : ''}
                                     />
                                 </div>
 
@@ -277,6 +355,7 @@
                                     <select
                                         onchange="formData.rating = this.value;"
                                         class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                        ${loading ? 'disabled' : ''}
                                     >
                                         <option value="">Selecione...</option>
                                         ${ratingOptions.map(opt => `<option value="${opt}" ${formData.rating === opt ? 'selected' : ''}>${opt}</option>`).join('')}
@@ -288,9 +367,10 @@
                                     <input
                                         type="text"
                                         value="${formData.date}"
-                                        onchange="formData.date = this.value;"
+                                        oninput="formData.date = this.value;"
                                         placeholder="dd/mm/aaaa"
                                         class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                        ${loading ? 'disabled' : ''}
                                     />
                                 </div>
 
@@ -300,6 +380,7 @@
                                     <select
                                         onchange="formData.country = this.value;"
                                         class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                        ${loading ? 'disabled' : ''}
                                     >
                                         <option value="">Selecione...</option>
                                         ${countryOptions.map(opt => `<option value="${opt}" ${formData.country === opt ? 'selected' : ''}>${opt}</option>`).join('')}
@@ -311,9 +392,10 @@
                                     <input
                                         type="text"
                                         value="${formData.avgTime}"
-                                        onchange="formData.avgTime = this.value;"
+                                        oninput="formData.avgTime = this.value;"
                                         placeholder="01:00:00"
                                         class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                        ${loading ? 'disabled' : ''}
                                     />
                                 </div>
                                 ` : ''}
@@ -322,13 +404,15 @@
                             <div class="flex gap-3 pt-4">
                                 <button
                                     onclick="handleSubmit();"
-                                    class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-medium"
+                                    class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-medium hover:shadow-lg transition-shadow disabled:opacity-50"
+                                    ${loading ? 'disabled' : ''}
                                 >
-                                    ${editingId ? 'Atualizar' : 'Adicionar'}
+                                    ${loading ? 'Salvando...' : (editingId !== null ? 'Atualizar' : 'Adicionar')}
                                 </button>
                                 <button
                                     onclick="resetForm(); render();"
-                                    class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium"
+                                    class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors disabled:opacity-50"
+                                    ${loading ? 'disabled' : ''}
                                 >
                                     Cancelar
                                 </button>
@@ -339,14 +423,19 @@
 
                     <!-- Items List -->
                     <div class="space-y-4">
-                        ${filteredItems.length === 0 ? `
+                        ${loading && items.length === 0 ? `
+                        <div class="bg-white rounded-xl shadow-md p-12 text-center">
+                            <div class="text-6xl mb-4">⏳</div>
+                            <p class="text-gray-500 text-lg">Carregando dados do Google Sheets...</p>
+                        </div>
+                        ` : filteredItems.length === 0 ? `
                         <div class="bg-white rounded-xl shadow-md p-12 text-center">
                             <div class="text-6xl mb-4">${searchTerm ? '🔍' : '📚'}</div>
                             <p class="text-gray-500 text-lg">
-                                ${searchTerm ? 'Nenhum resultado encontrado' : 'Nenhum item adicionado ainda'}
+                                ${searchTerm ? 'Nenhum resultado encontrado' : 'Nenhum item encontrado'}
                             </p>
                         </div>
-                        ` : filteredItems.map(item => `
+                        ` : filteredItems.map((item, index) => `
                         <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-6">
                             <div class="flex items-start justify-between flex-wrap gap-4">
                                 <div class="flex-1 min-w-0">
@@ -367,7 +456,7 @@
                                             ${item.rating}
                                         </span>
                                         ` : ''}
-                                        <span class="text-gray-600">📅 ${item.date}</span>
+                                        ${item.date ? `<span class="text-gray-600">📅 ${item.date}</span>` : ''}
                                         ${item.pages ? `<span class="text-gray-600">${item.pages}</span>` : ''}
                                         ${item.country ? `<span class="text-gray-600">🌍 ${item.country}</span>` : ''}
                                         ${item.avgTime ? `<span class="text-gray-600">⏱️ ${item.avgTime}</span>` : ''}
@@ -376,14 +465,16 @@
 
                                 <div class="flex gap-2">
                                     <button
-                                        onclick='handleEdit(${JSON.stringify(item).replace(/'/g, "\\'")})'
-                                        class="px-4 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
+                                        onclick='handleEdit(${item.id})'
+                                        class="px-4 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors disabled:opacity-50"
+                                        ${loading ? 'disabled' : ''}
                                     >
                                         Editar
                                     </button>
                                     <button
                                         onclick="handleDelete(${item.id})"
-                                        class="px-4 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
+                                        class="px-4 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors disabled:opacity-50"
+                                        ${loading ? 'disabled' : ''}
                                     >
                                         Excluir
                                     </button>
@@ -397,7 +488,6 @@
         }
 
         loadData();
-        render();
     </script>
 </body>
 </html>
