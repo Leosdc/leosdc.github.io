@@ -46,6 +46,9 @@
         let currentUser = null;
         let isLoginMode = true;
         let items = [];
+        let displayedItems = [];
+        let itemsPerPage = 10;
+        let currentPage = 1;
         let showForm = false;
         let filter = 'all';
         let searchTerm = '';
@@ -185,7 +188,24 @@
 
         function performSearch() {
             searchTerm = searchInput;
+            currentPage = 1;
             render();
+        }
+
+        function loadMoreItems() {
+            const filtered = getFilteredItems();
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            displayedItems = filtered.slice(0, end);
+            
+            if (end < filtered.length) {
+                currentPage++;
+            }
+        }
+
+        function resetPagination() {
+            currentPage = 1;
+            displayedItems = [];
         }
 
         function formatDate(dateStr) {
@@ -265,6 +285,9 @@
                     country: item['País'] || item.País || '',
                     avgTime: item['Tempo Médio'] || item['Tempo médio'] || ''
                 })).filter(item => item.title);
+                
+                resetPagination();
+                loadMoreItems();
             } catch (error) {
                 console.error('Erro ao carregar dados:', error);
                 showNotification('Erro ao carregar dados do Google Sheets', 'error');
@@ -575,8 +598,10 @@
                 return;
             }
 
+            loadMoreItems();
             const stats = getStats();
             const filteredItems = getFilteredItems();
+            const hasMore = displayedItems.length < filteredItems.length;
 
             document.getElementById('app').innerHTML = `
                 <!-- Header -->
@@ -896,14 +921,14 @@
                             <div class="text-6xl mb-4">⏳</div>
                             <p class="text-gray-500 text-lg">Carregando dados do Google Sheets...</p>
                         </div>
-                        ` : filteredItems.length === 0 ? `
+                        ` : displayedItems.length === 0 ? `
                         <div class="bg-white rounded-xl shadow-md p-12 text-center">
                             <div class="text-6xl mb-4">${searchTerm ? '🔍' : '📚'}</div>
                             <p class="text-gray-500 text-lg">
                                 ${searchTerm ? 'Nenhum resultado encontrado' : 'Nenhum item encontrado'}
                             </p>
                         </div>
-                        ` : filteredItems.map((item) => `
+                        ` : displayedItems.map((item) => `
                         <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-4 md:p-6">
                             <div class="space-y-4">
                                 <div class="flex items-start gap-3">
@@ -948,6 +973,23 @@
                             </div>
                         </div>
                         `).join('')}
+                        
+                        ${hasMore && displayedItems.length > 0 ? `
+                        <div class="flex justify-center py-6">
+                            <button
+                                onclick="render();"
+                                class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-lg font-medium hover:shadow-lg transition-shadow"
+                            >
+                                Carregar mais (${filteredItems.length - displayedItems.length} restantes)
+                            </button>
+                        </div>
+                        ` : ''}
+                        
+                        ${displayedItems.length > 0 && !hasMore ? `
+                        <div class="text-center py-6 text-gray-500 text-sm">
+                            Todos os itens foram carregados 📚
+                        </div>
+                        ` : ''}
                     </div>
                 </div>
             `;
