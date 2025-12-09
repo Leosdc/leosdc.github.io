@@ -52,6 +52,21 @@
         const categoryOptions = ['Livro', 'Série'];
         const countryOptions = ['Brasil', 'Coreia do Sul', 'China', 'Japão', 'Taiwan', 'Tailândia', 'Estados Unidos', 'Outro'];
 
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg transform transition-all duration-300 ${
+                type === 'success' ? 'bg-green-500' : 'bg-red-500'
+            } text-white font-medium`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateY(-20px)';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
         async function loadData() {
             loading = true;
             render();
@@ -72,7 +87,7 @@
                 })).filter(item => item.title);
             } catch (error) {
                 console.error('Erro ao carregar dados:', error);
-                alert('Erro ao carregar dados do Google Sheets');
+                showNotification('Erro ao carregar dados do Google Sheets', 'error');
             }
             loading = false;
             render();
@@ -99,7 +114,7 @@
                 return true;
             } catch (error) {
                 console.error('Erro ao salvar:', error);
-                alert('Erro ao salvar no Google Sheets');
+                showNotification('Erro ao salvar no Google Sheets', 'error');
                 loading = false;
                 render();
                 return false;
@@ -108,7 +123,7 @@
 
         async function handleSubmit() {
             if (!formData.title) {
-                alert('O título é obrigatório');
+                showNotification('O título é obrigatório!', 'error');
                 return;
             }
 
@@ -130,8 +145,10 @@
                     oldTitle: oldItem.title,
                     ...itemData
                 });
+                showNotification('✨ Item atualizado com sucesso!');
             } else {
                 await saveToSheet('add', itemData);
+                showNotification('✨ Item adicionado com sucesso!');
             }
 
             resetForm();
@@ -142,6 +159,7 @@
             if (confirm('Deseja realmente excluir este item?')) {
                 const item = items[index];
                 await saveToSheet('delete', { title: item.title });
+                showNotification('🗑️ Item excluído com sucesso!');
             }
         }
 
@@ -208,7 +226,7 @@
                 <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 shadow-lg">
                     <div class="max-w-6xl mx-auto">
                         <h1 class="text-3xl font-bold mb-2">📚 Minha Biblioteca</h1>
-                        <p class="text-purple-100">Organize seus livros e séries favoritas</p>
+                        <p class="text-purple-100">App da princesa Ana Alice! ❤️</p>
                         ${loading ? '<p class="text-purple-200 mt-2 flex items-center gap-2"><span class="loading"></span> Carregando...</p>' : ''}
                     </div>
                 </div>
