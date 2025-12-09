@@ -33,6 +33,7 @@
         let showForm = false;
         let filter = 'all';
         let searchTerm = '';
+        let searchInput = '';
         let editingId = null;
         let loading = false;
         let formData = {
@@ -65,6 +66,11 @@
                 notification.style.transform = 'translateY(-20px)';
                 setTimeout(() => notification.remove(), 300);
             }, 3000);
+        }
+
+        function performSearch() {
+            searchTerm = searchInput;
+            render();
         }
 
         function formatDate(dateStr) {
@@ -342,13 +348,30 @@
                     <!-- Controls -->
                     <div class="bg-white rounded-xl shadow-md p-4 mb-6">
                         <div class="flex flex-col md:flex-row gap-4">
-                            <input
-                                type="text"
-                                id="searchInput"
-                                placeholder="🔍 Buscar título ou autor..."
-                                value="${searchTerm}"
-                                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                            />
+                            <div class="flex-1 flex gap-2">
+                                <input
+                                    type="text"
+                                    id="searchInput"
+                                    placeholder="🔍 Buscar título ou autor..."
+                                    value="${searchInput}"
+                                    onkeypress="if(event.key === 'Enter') performSearch();"
+                                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                                />
+                                <button
+                                    onclick="performSearch();"
+                                    class="px-6 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
+                                >
+                                    Buscar
+                                </button>
+                                ${searchTerm ? `
+                                <button
+                                    onclick="searchTerm = ''; searchInput = ''; render();"
+                                    class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                                >
+                                    ✕
+                                </button>
+                                ` : ''}
+                            </div>
                             
                             <div class="flex gap-2 flex-wrap">
                                 <button
@@ -589,12 +612,15 @@
                 </div>
             `;
             
-            // Adiciona o evento de busca depois de renderizar
-            const searchInput = document.getElementById('searchInput');
-            if (searchInput) {
-                searchInput.addEventListener('input', function(e) {
-                    searchTerm = e.target.value;
-                    render();
+            // Atualiza o valor do input sem perder o foco
+            const input = document.getElementById('searchInput');
+            if (input && document.activeElement === input) {
+                const cursorPos = input.selectionStart;
+                input.value = searchInput;
+                input.setSelectionRange(cursorPos, cursorPos);
+            } else if (input) {
+                input.addEventListener('input', function(e) {
+                    searchInput = e.target.value;
                 });
             }
         }
