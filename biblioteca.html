@@ -135,6 +135,7 @@
             }
 
             resetForm();
+            render();
         }
 
         async function handleDelete(index) {
@@ -370,11 +371,14 @@
                                         value="${formData.date ? (() => {
                                             const parts = formData.date.split('/');
                                             if (parts.length === 3) {
-                                                return parts[2] + '-' + parts[1].padStart(2, '0') + '-' + parts[0].padStart(2, '0');
+                                                const day = parts[0].padStart(2, '0');
+                                                const month = parts[1].padStart(2, '0');
+                                                const year = parts[2];
+                                                return year + '-' + month + '-' + day;
                                             }
                                             return '';
                                         })() : ''}"
-                                        onchange="const parts = this.value.split('-'); formData.date = parts[2] + '/' + parts[1] + '/' + parts[0]; render();"
+                                        onchange="if(this.value) { const parts = this.value.split('-'); formData.date = parts[2] + '/' + parts[1] + '/' + parts[0]; }"
                                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                                         ${loading ? 'disabled' : ''}
                                     />
