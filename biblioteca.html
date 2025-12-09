@@ -467,25 +467,25 @@
         function renderChart() {
             const data = getChartData();
             if (data.length === 0) {
-                return '<div class="text-center text-gray-500 py-12">Nenhum dado disponível para o período selecionado</div>';
+                return '<div class="text-center text-gray-500 py-12 text-sm">Nenhum dado disponível para o período selecionado</div>';
             }
 
             const maxValue = Math.max(...data.map(d => d.value));
 
             return `
-                <div class="space-y-4">
+                <div class="space-y-3">
                     ${data.map(item => {
                         const percentage = (item.value / maxValue) * 100;
                         return `
-                            <div class="flex items-end gap-3">
-                                <div class="w-32 text-sm text-gray-600 text-right">${item.label}</div>
-                                <div class="flex-1 flex items-center gap-3">
-                                    <div class="flex-1 bg-gray-100 rounded-full h-8 relative overflow-hidden">
+                            <div class="flex items-center gap-2">
+                                <div class="w-20 md:w-32 text-xs md:text-sm text-gray-600 text-right flex-shrink-0">${item.label}</div>
+                                <div class="flex-1 flex items-center gap-2">
+                                    <div class="flex-1 bg-gray-100 rounded-full h-7 md:h-8 relative overflow-hidden">
                                         <div 
-                                            class="bg-gradient-to-r from-purple-500 to-pink-500 h-full rounded-full transition-all duration-500 flex items-center justify-end px-3"
+                                            class="bg-gradient-to-r from-purple-500 to-pink-500 h-full rounded-full transition-all duration-500 flex items-center justify-end px-2 md:px-3"
                                             style="width: ${percentage}%"
                                         >
-                                            <span class="text-white font-bold text-sm">${item.value}</span>
+                                            <span class="text-white font-bold text-xs md:text-sm">${item.value}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -624,71 +624,74 @@
                 <div class="max-w-6xl mx-auto px-4 pb-8">
                     <!-- Controls -->
                     <div class="bg-white rounded-xl shadow-md p-4 mb-6">
-                        <div class="flex flex-col md:flex-row gap-4">
-                            <div class="flex-1 flex gap-2">
+                        <div class="space-y-3">
+                            <div class="flex gap-2">
                                 <input
                                     type="text"
                                     id="searchInput"
-                                    placeholder="🔍 Buscar título ou autor..."
+                                    placeholder="🔍 Buscar..."
                                     value="${searchInput}"
                                     onkeypress="if(event.key === 'Enter') performSearch();"
-                                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 text-sm"
                                 />
                                 <button
                                     onclick="performSearch();"
-                                    class="px-6 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
+                                    class="px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors text-sm whitespace-nowrap"
                                 >
                                     Buscar
                                 </button>
                                 ${searchTerm ? `
                                 <button
                                     onclick="searchTerm = ''; searchInput = ''; render();"
-                                    class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                                    class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors text-sm"
                                 >
                                     ✕
                                 </button>
                                 ` : ''}
                             </div>
                             
-                            <div class="flex gap-2 flex-wrap">
+                            <div class="flex gap-2 overflow-x-auto pb-2">
                                 <button
                                     onclick="filter = 'all'; render();"
-                                    class="px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'all' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700'}"
+                                    class="px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${filter === 'all' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700'}"
                                 >
                                     Todos
                                 </button>
                                 <button
                                     onclick="filter = 'books'; render();"
-                                    class="px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'books' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}"
+                                    class="px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${filter === 'books' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}"
                                 >
                                     📖 Livros
                                 </button>
                                 <button
                                     onclick="filter = 'series'; render();"
-                                    class="px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'series' ? 'bg-pink-600 text-white' : 'bg-gray-100 text-gray-700'}"
+                                    class="px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${filter === 'series' ? 'bg-pink-600 text-white' : 'bg-gray-100 text-gray-700'}"
                                 >
                                     📺 Séries
                                 </button>
+                            </div>
+
+                            <div class="flex gap-2 overflow-x-auto pb-2">
                                 <button
                                     onclick="showCharts = !showCharts; render();"
-                                    class="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-6 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow"
+                                    class="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow text-sm whitespace-nowrap"
                                     ${loading ? 'disabled' : ''}
                                 >
-                                    📊 ${showCharts ? 'Ocultar' : 'Ver'} Gráficos
+                                    📊 Gráficos
                                 </button>
                                 <button
                                     onclick="showForm = !showForm; render();"
-                                    class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow"
+                                    class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow text-sm whitespace-nowrap"
                                     ${loading ? 'disabled' : ''}
                                 >
                                     ➕ Adicionar
                                 </button>
                                 <button
                                     onclick="loadData();"
-                                    class="bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow"
+                                    class="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow text-sm whitespace-nowrap"
                                     ${loading ? 'disabled' : ''}
                                 >
-                                    🔄 Atualizar
+                                    🔄
                                 </button>
                             </div>
                         </div>
@@ -696,47 +699,47 @@
 
                     <!-- Charts Panel -->
                     ${showCharts ? `
-                    <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-                        <h2 class="text-2xl font-bold mb-4 text-gray-800">📊 Estatísticas</h2>
+                    <div class="bg-white rounded-xl shadow-lg p-4 md:p-6 mb-6">
+                        <h2 class="text-xl md:text-2xl font-bold mb-4 text-gray-800">📊 Estatísticas</h2>
                         
-                        <div class="flex flex-wrap gap-3 mb-6">
-                            <div class="flex gap-2 bg-gray-100 rounded-lg p-1">
+                        <div class="space-y-3">
+                            <div class="flex gap-2 bg-gray-100 rounded-lg p-1 overflow-x-auto">
                                 <button
                                     onclick="chartPeriod = 'daily'; render();"
-                                    class="px-4 py-2 rounded-lg font-medium transition-colors ${chartPeriod === 'daily' ? 'bg-white shadow-sm' : ''}"
+                                    class="px-3 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${chartPeriod === 'daily' ? 'bg-white shadow-sm' : ''}"
                                 >
                                     Diário
                                 </button>
                                 <button
                                     onclick="chartPeriod = 'monthly'; render();"
-                                    class="px-4 py-2 rounded-lg font-medium transition-colors ${chartPeriod === 'monthly' ? 'bg-white shadow-sm' : ''}"
+                                    class="px-3 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${chartPeriod === 'monthly' ? 'bg-white shadow-sm' : ''}"
                                 >
                                     Mensal
                                 </button>
                                 <button
                                     onclick="chartPeriod = 'yearly'; render();"
-                                    class="px-4 py-2 rounded-lg font-medium transition-colors ${chartPeriod === 'yearly' ? 'bg-white shadow-sm' : ''}"
+                                    class="px-3 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${chartPeriod === 'yearly' ? 'bg-white shadow-sm' : ''}"
                                 >
                                     Anual
                                 </button>
                             </div>
 
-                            <div class="flex gap-2 bg-gray-100 rounded-lg p-1">
+                            <div class="flex gap-2 bg-gray-100 rounded-lg p-1 overflow-x-auto">
                                 <button
                                     onclick="chartType = 'all'; render();"
-                                    class="px-4 py-2 rounded-lg font-medium transition-colors ${chartType === 'all' ? 'bg-white shadow-sm' : ''}"
+                                    class="px-3 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${chartType === 'all' ? 'bg-white shadow-sm' : ''}"
                                 >
                                     Todos
                                 </button>
                                 <button
                                     onclick="chartType = 'books'; render();"
-                                    class="px-4 py-2 rounded-lg font-medium transition-colors ${chartType === 'books' ? 'bg-white shadow-sm' : ''}"
+                                    class="px-3 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${chartType === 'books' ? 'bg-white shadow-sm' : ''}"
                                 >
                                     📖 Livros
                                 </button>
                                 <button
                                     onclick="chartType = 'series'; render();"
-                                    class="px-4 py-2 rounded-lg font-medium transition-colors ${chartType === 'series' ? 'bg-white shadow-sm' : ''}"
+                                    class="px-3 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${chartType === 'series' ? 'bg-white shadow-sm' : ''}"
                                 >
                                     📺 Séries
                                 </button>
@@ -751,8 +754,8 @@
 
                     <!-- Form -->
                     ${showForm ? `
-                    <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-                        <h2 class="text-2xl font-bold mb-4 text-gray-800">
+                    <div class="bg-white rounded-xl shadow-lg p-4 md:p-6 mb-6">
+                        <h2 class="text-xl md:text-2xl font-bold mb-4 text-gray-800">
                             ${editingId !== null ? 'Editar Item' : 'Adicionar Novo Item'}
                         </h2>
                         <div class="space-y-4">
@@ -866,17 +869,17 @@
                                 ` : ''}
                             </div>
 
-                            <div class="flex gap-3 pt-4">
+                            <div class="flex flex-col sm:flex-row gap-3 pt-4">
                                 <button
                                     onclick="handleSubmit();"
-                                    class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-medium hover:shadow-lg transition-shadow disabled:opacity-50"
+                                    class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-medium hover:shadow-lg transition-shadow disabled:opacity-50 text-sm"
                                     ${loading ? 'disabled' : ''}
                                 >
                                     ${loading ? 'Salvando...' : (editingId !== null ? 'Atualizar' : 'Adicionar')}
                                 </button>
                                 <button
                                     onclick="resetForm(); render();"
-                                    class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors disabled:opacity-50"
+                                    class="sm:w-auto px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors disabled:opacity-50 text-sm"
                                     ${loading ? 'disabled' : ''}
                                 >
                                     Cancelar
@@ -901,44 +904,42 @@
                             </p>
                         </div>
                         ` : filteredItems.map((item) => `
-                        <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-6">
-                            <div class="flex items-start justify-between flex-wrap gap-4">
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-start gap-3 mb-3">
-                                        <div class="text-3xl">${item.category === 'Livro' ? '📖' : '📺'}</div>
-                                        <div class="flex-1">
-                                            <h3 class="text-xl font-bold text-gray-800">${item.title}</h3>
-                                            ${item.author ? `<p class="text-gray-600 mt-1">${item.author}</p>` : ''}
-                                        </div>
-                                    </div>
-
-                                    <div class="flex flex-wrap gap-2 text-sm">
-                                        <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full font-medium">
-                                            ${item.status}
-                                        </span>
-                                        ${item.rating ? `
-                                        <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full font-medium">
-                                            ${item.rating}
-                                        </span>
-                                        ` : ''}
-                                        ${item.date ? `<span class="text-gray-600">📅 ${formatDate(item.date)}</span>` : ''}
-                                        ${item.pages ? `<span class="text-gray-600">${item.pages} ${item.category === 'Livro' ? 'páginas' : 'episódios'}</span>` : ''}
-                                        ${item.country ? `<span class="text-gray-600">🌍 ${item.country}</span>` : ''}
-                                        ${item.avgTime ? `<span class="text-gray-600">⏱️ ${formatTime(item.avgTime)}</span>` : ''}
+                        <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-4 md:p-6">
+                            <div class="space-y-4">
+                                <div class="flex items-start gap-3">
+                                    <div class="text-3xl">${item.category === 'Livro' ? '📖' : '📺'}</div>
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="text-lg md:text-xl font-bold text-gray-800 break-words">${item.title}</h3>
+                                        ${item.author ? `<p class="text-gray-600 mt-1 text-sm">${item.author}</p>` : ''}
                                     </div>
                                 </div>
 
-                                <div class="flex gap-2">
+                                <div class="flex flex-wrap gap-2 text-xs md:text-sm">
+                                    <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full font-medium">
+                                        ${item.status}
+                                    </span>
+                                    ${item.rating ? `
+                                    <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full font-medium">
+                                        ${item.rating}
+                                    </span>
+                                    ` : ''}
+                                    ${item.date ? `<span class="text-gray-600">📅 ${formatDate(item.date)}</span>` : ''}
+                                    ${item.pages ? `<span class="text-gray-600">${item.pages} ${item.category === 'Livro' ? 'páginas' : 'episódios'}</span>` : ''}
+                                    ${item.country ? `<span class="text-gray-600">🌍 ${item.country}</span>` : ''}
+                                    ${item.avgTime ? `<span class="text-gray-600">⏱️ ${formatTime(item.avgTime)}</span>` : ''}
+                                </div>
+
+                                <div class="flex gap-2 pt-2">
                                     <button
                                         onclick='handleEdit(${item.id})'
-                                        class="px-4 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors disabled:opacity-50"
+                                        class="flex-1 px-4 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors disabled:opacity-50"
                                         ${loading ? 'disabled' : ''}
                                     >
                                         Editar
                                     </button>
                                     <button
                                         onclick="handleDelete(${item.id})"
-                                        class="px-4 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors disabled:opacity-50"
+                                        class="flex-1 px-4 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors disabled:opacity-50"
                                         ${loading ? 'disabled' : ''}
                                     >
                                         Excluir
