@@ -149,7 +149,7 @@
                     id: index,
                     title: item['Título'] || item.Título || '',
                     author: item['Autor'] || item.Autor || '',
-                    pages: item['Páginas/Episódios'] || item['Nº Páginas | Episódios'] || '',
+                    pages: (item['Páginas/Episódios'] || item['Nº Páginas | Episódios'] || '').toString().replace(' Páginas', '').replace(' Episódios', '').replace(' páginas', '').replace(' episódios', '').trim(),
                     status: item['Status'] || item.Status || '',
                     rating: item['Avaliação'] || item.Avaliação || '',
                     date: item['Data'] || item.Data || '',
@@ -583,7 +583,7 @@
                                         </span>
                                         ` : ''}
                                         ${item.date ? `<span class="text-gray-600">📅 ${formatDate(item.date)}</span>` : ''}
-                                        ${item.pages ? `<span class="text-gray-600">${item.pages}</span>` : ''}
+                                        ${item.pages ? `<span class="text-gray-600">${item.pages} ${item.category === 'Livro' ? 'páginas' : 'episódios'}</span>` : ''}
                                         ${item.country ? `<span class="text-gray-600">🌍 ${item.country}</span>` : ''}
                                         ${item.avgTime ? `<span class="text-gray-600">⏱️ ${formatTime(item.avgTime)}</span>` : ''}
                                     </div>
