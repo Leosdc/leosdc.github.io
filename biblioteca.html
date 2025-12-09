@@ -69,36 +69,67 @@
 
         function formatDate(dateStr) {
             if (!dateStr) return '';
+            
             // Se já está no formato dd/mm/yyyy, retorna
-            if (dateStr.includes('/')) return dateStr;
-            // Se está no formato ISO (yyyy-mm-dd), converte
-            const parts = dateStr.split('-');
-            if (parts.length === 3) {
-                return `${parts[2]}/${parts[1]}/${parts[0]}`;
-            }
-            // Se está no formato de timestamp do Google Sheets
-            try {
-                const date = new Date(dateStr);
-                const day = String(date.getDate()).padStart(2, '0');
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const year = date.getFullYear();
-                return `${day}/${month}/${year}`;
-            } catch {
+            if (dateStr.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
                 return dateStr;
             }
+            
+            // Remove a parte de timezone se existir (ex: "000Z/12/2025")
+            if (dateStr.includes('000Z')) {
+                const parts = dateStr.split('/');
+                if (parts.length === 3) {
+                    // Pega apenas a parte da data dd/mm/yyyy
+                    return `${parts[1]}/${parts[2]}`;
+                }
+            }
+            
+            // Tenta converter de timestamp ISO
+            try {
+                const date = new Date(dateStr);
+                if (!isNaN(date.getTime())) {
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const year = date.getFullYear();
+                    return `${day}/${month}/${year}`;
+                }
+            } catch (e) {
+                console.error('Erro ao formatar data:', e);
+            }
+            
+            return dateStr;
         }
 
         function formatTime(timeStr) {
             if (!timeStr) return '';
-            // Remove a parte da data se existir
+            
+            // Se já está no formato hh:mm:ss, retorna
+            if (timeStr.match(/^\d{2}:\d{2}:\d{2}$/)) {
+                return timeStr;
+            }
+            
+            // Remove tudo antes de "T" se for ISO timestamp
             if (timeStr.includes('T')) {
                 timeStr = timeStr.split('T')[1];
             }
+            
+            // Remove a parte ".000Z" se existir
+            if (timeStr.includes('.')) {
+                timeStr = timeStr.split('.')[0];
+            }
+            
+            // Remove "Z" no final se existir
+            timeStr = timeStr.replace('Z', '');
+            
             // Pega apenas HH:MM:SS
             const parts = timeStr.split(':');
             if (parts.length >= 3) {
-                return `${parts[0]}:${parts[1]}:${parts[2].substring(0, 2)}`;
+                const hh = parts[0].padStart(2, '0');
+                const mm = parts[1].padStart(2, '0');
+                const ss = parts[2].substring(0, 2).padStart(2, '0');
+                return `${hh}:${mm}:${ss}`;
             }
+            
             return timeStr;
         }
 
@@ -315,7 +346,8 @@
                                 type="text"
                                 placeholder="🔍 Buscar título ou autor..."
                                 value="${searchTerm}"
-                                oninput="searchTerm = this.value; render();"
+                                oninput="searchTerm = this.value;"
+                                onkeyup="render();"
                                 class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                             />
                             
