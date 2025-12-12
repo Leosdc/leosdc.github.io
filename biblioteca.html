@@ -848,7 +848,7 @@
 
                     <!-- Form -->
                     ${showForm ? `
-                    <div class="bg-white rounded-xl shadow-lg p-4 md:p-6 mb-6">
+                    <div id="formPanel" class="bg-white rounded-xl shadow-lg p-4 md:p-6 mb-6">
                         <h2 class="text-xl md:text-2xl font-bold mb-4 text-gray-800">
                             ${editingId !== null ? 'Editar Item' : 'Adicionar Novo Item'}
                         </h2>
@@ -1072,6 +1072,16 @@
                 input.addEventListener('input', function(e) {
                     searchInput = e.target.value;
                 });
+            }
+
+            // Scroll para o formulário se estiver aberto
+            if (showForm) {
+                setTimeout(() => {
+                    const formPanel = document.getElementById('formPanel');
+                    if (formPanel) {
+                        formPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }, 100);
             }
         }
 
