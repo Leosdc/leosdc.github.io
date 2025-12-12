@@ -58,7 +58,7 @@
         let chartPeriod = 'monthly';
         let chartType = 'all';
         let loading = false;
-        let sortBy = 'date-desc'; // date-desc, date-asc, title-asc, title-desc, category, status
+        let sortBy = 'date-desc';
         let showSortMenu = false;
         let loginData = {
             username: '',
@@ -428,7 +428,6 @@
                 return matchesFilter && matchesSearch;
             });
 
-            // Aplicar ordenação
             filtered.sort((a, b) => {
                 switch(sortBy) {
                     case 'title-asc':
@@ -741,46 +740,51 @@
                                 </button>
                             </div>
 
-                            <div class="flex gap-2 overflow-x-auto pb-2">
+                            <div class="grid grid-cols-4 gap-2">
                                 <button
                                     onclick="showCharts = !showCharts; render();"
-                                    class="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow text-sm whitespace-nowrap"
+                                    class="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-3 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow text-sm"
                                     ${loading ? 'disabled' : ''}
                                 >
-                                    📊 Gráficos
+                                    <span class="hidden sm:inline">📊 Gráficos</span>
+                                    <span class="sm:hidden">📊</span>
                                 </button>
                                 <button
                                     onclick="showForm = !showForm; render();"
-                                    class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow text-sm whitespace-nowrap"
+                                    class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow text-sm"
                                     ${loading ? 'disabled' : ''}
                                 >
-                                    ➕ Adicionar
+                                    <span class="hidden sm:inline">➕ Adicionar</span>
+                                    <span class="sm:hidden">➕</span>
                                 </button>
                                 <button
                                     onclick="loadData();"
-                                    class="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow text-sm whitespace-nowrap"
+                                    class="bg-green-600 text-white px-3 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow text-sm"
                                     ${loading ? 'disabled' : ''}
                                 >
-                                    🔄 Atualizar
+                                    <span class="hidden sm:inline">🔄 Atualizar</span>
+                                    <span class="sm:hidden">🔄</span>
                                 </button>
-                                <button
-                                    onclick="showSortMenu = !showSortMenu; render();"
-                                    class="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow text-sm whitespace-nowrap"
-                                >
-                                    🔽 Ordenar
-                                </button>
-                                ${showSortMenu ? `
-                                <div class="bg-white border rounded-lg shadow-lg p-2 absolute mt-2 z-50">
-                                    <button onclick="sortBy='title-asc'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-gray-100">Título A–Z</button>
-                                    <button onclick="sortBy='title-desc'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-gray-100">Título Z–A</button>
-                                    <button onclick="sortBy='date-desc'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-gray-100">Mais recentes</button>
-                                    <button onclick="sortBy='date-asc'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-gray-100">Mais antigos</button>
-                                    <button onclick="sortBy='category'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-gray-100">Categoria</button>
-                                    <button onclick="sortBy='status'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-gray-100">Status</button>
-                                    <button onclick="sortBy='rating'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-gray-100">Avaliação</button>
+                                <div class="relative">
+                                    <button
+                                        onclick="showSortMenu = !showSortMenu; render();"
+                                        class="w-full bg-gray-200 text-gray-700 px-3 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow text-sm"
+                                    >
+                                        <span class="hidden sm:inline">🔽 Ordenar</span>
+                                        <span class="sm:hidden">🔽</span>
+                                    </button>
+                                    ${showSortMenu ? `
+                                    <div class="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg p-2 z-50">
+                                        <button onclick="sortBy='title-asc'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded text-sm">Título A–Z</button>
+                                        <button onclick="sortBy='title-desc'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded text-sm">Título Z–A</button>
+                                        <button onclick="sortBy='date-desc'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded text-sm">Mais recentes</button>
+                                        <button onclick="sortBy='date-asc'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded text-sm">Mais antigos</button>
+                                        <button onclick="sortBy='category'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded text-sm">Categoria</button>
+                                        <button onclick="sortBy='status'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded text-sm">Status</button>
+                                        <button onclick="sortBy='rating'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded text-sm">Avaliação</button>
+                                    </div>
+                                    ` : ''}
                                 </div>
-                                ` : ''}
-
                             </div>
                         </div>
                     </div>
