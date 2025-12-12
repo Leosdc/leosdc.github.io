@@ -642,7 +642,9 @@
                 return;
             }
 
-            loadMoreItems();
+            if (displayedItems.length === 0) {
+                loadMoreItems();
+            }
             const stats = getStats();
             const filteredItems = getFilteredItems();
             const hasMore = displayedItems.length < filteredItems.length;
@@ -1044,7 +1046,7 @@
                         ${hasMore && displayedItems.length > 0 ? `
                         <div class="flex justify-center py-6">
                             <button
-                                onclick="render();"
+                                onclick="currentPage++; loadMoreItems(); render();"
                                 class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-lg font-medium hover:shadow-lg transition-shadow"
                             >
                                 Carregar mais (${filteredItems.length - displayedItems.length} restantes)
