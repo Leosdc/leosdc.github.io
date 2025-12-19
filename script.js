@@ -211,7 +211,7 @@ async function loadData() {
             status: item['Status'] || item.Status || '',
             rating: item['Avaliação'] || item.Avaliação || '',
             date: item['Data'] || item.Data || '',
-            category: item['Categoria'] || item.Categoria || 'Livro',
+            category: (item['Categoria'] || item.Categoria || 'Livro').trim(),
             country: item['País'] || item.País || ''
         })).filter(item => item.title);
 
@@ -344,11 +344,13 @@ function resetForm() {
 }
 
 function getFilteredItems() {
+    console.log('Filtrando por:', filter, 'Termo:', searchTerm);
     let filtered = items.filter(item => {
+        const cat = item.category;
         const matchesFilter = filter === 'all' ||
-            (filter === 'books' && item.category === 'Livro') ||
-            (filter === 'series' && item.category === 'Série') ||
-            (filter === 'movies' && item.category === 'Filme');
+            (filter === 'books' && cat === 'Livro') ||
+            (filter === 'series' && (cat === 'Série' || cat === 'Serie')) ||
+            (filter === 'movies' && (cat === 'Filme' || cat === 'Filmes'));
         const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (item.author && item.author.toLowerCase().includes(searchTerm.toLowerCase()));
         return matchesFilter && matchesSearch;
@@ -935,7 +937,11 @@ function render() {
                 <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-4 md:p-6">
                     <div class="space-y-4">
                         <div class="flex items-start gap-3">
-                            <div class="text-3xl">${item.category === 'Livro' ? '📖' : item.category === 'Filme' ? '🎬' : '📺'}</div> 
+                            <div class="text-3xl" title="${item.category}">
+                                ${item.category === 'Livro' ? '📖' :
+            (item.category === 'Série' || item.category === 'Serie') ? '📺' :
+                (item.category === 'Filme' || item.category === 'Filmes') ? '🎬' : '❓'}
+                            </div>
                             <div class="flex-1 min-w-0">
                                 <h3 class="text-lg md:text-xl font-bold text-gray-800 break-words">${item.title}</h3>
                                 ${item.author ? `<p class="text-gray-600 mt-1 text-sm">${item.author}</p>` : ''}
@@ -1022,13 +1028,30 @@ checkSavedLogin();
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
+
         const swCode = `
+            const CACHE_NAME = 'biblioteca-v2';
+            
             self.addEventListener('install', (e) => {
+                self.skipWaiting();
                 e.waitUntil(
-                    caches.open('biblioteca-v1').then((cache) => {
+                    caches.open(CACHE_NAME).then((cache) => {
                         return cache.addAll(['./', './biblioteca.html', './style.css', './script.js']);
                     })
                 );
+            });
+            
+            self.addEventListener('activate', (e) => {
+                e.waitUntil(
+                    caches.keys().then((keyList) => {
+                        return Promise.all(keyList.map((key) => {
+                            if (key !== CACHE_NAME) {
+                                return caches.delete(key);
+                            }
+                        }));
+                    })
+                );
+                return self.clients.claim();
             });
             
             self.addEventListener('fetch', (e) => {
@@ -1043,6 +1066,20 @@ if ('serviceWorker' in navigator) {
         const blob = new Blob([swCode], { type: 'application/javascript' });
         const swUrl = URL.createObjectURL(blob);
 
-        navigator.serviceWorker.register(swUrl).catch(() => { });
+        navigator.serviceWorker.register(swUrl)
+            .then(registration => {
+                registration.onupdatefound = () => {
+                    const installingWorker = registration.installing;
+                    installingWorker.onstatechange = () => {
+                        if (installingWorker.state === 'installed') {
+                            if (navigator.serviceWorker.controller) {
+                                // New update available
+                                console.log('Nova versão disponível!');
+                            }
+                        }
+                    };
+                };
+            })
+            .catch(err => console.error('Erro ao registrar SW:', err));
     });
 }
