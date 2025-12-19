@@ -146,7 +146,7 @@ function handleLogout() {
 
 function performSearch() {
     searchTerm = searchInput;
-    currentPage = 1;
+    resetPagination();
     render();
 }
 
@@ -657,25 +657,25 @@ function render() {
                     
                     <div class="flex gap-2 overflow-x-auto pb-2">
                         <button
-                            onclick="filter = 'all'; render();"
+                            onclick="filter = 'all'; resetPagination(); render();"
                             class="px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${filter === 'all' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700'}"
                         >
                             Todos
                         </button>
                         <button
-                            onclick="filter = 'books'; render();"
+                            onclick="filter = 'books'; resetPagination(); render();"
                             class="px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${filter === 'books' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}"
                         >
                             📖 Livros
                         </button>
                         <button
-                            onclick="filter = 'series'; render();"
+                            onclick="filter = 'series'; resetPagination(); render();"
                             class="px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${filter === 'series' ? 'bg-pink-600 text-white' : 'bg-gray-100 text-gray-700'}"
                         >
                             📺 Séries
                         </button>
                          <button
-                            onclick="filter = 'movies'; render();"
+                            onclick="filter = 'movies'; resetPagination(); render();"
                             class="px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${filter === 'movies' ? 'bg-yellow-600 text-white' : 'bg-gray-100 text-gray-700'}"
                         >
                             🎬 Filmes
@@ -1030,7 +1030,7 @@ if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
 
         const swCode = `
-            const CACHE_NAME = 'biblioteca-v2';
+            const CACHE_NAME = 'biblioteca-v3';
             
             self.addEventListener('install', (e) => {
                 self.skipWaiting();
