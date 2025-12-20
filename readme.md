@@ -117,6 +117,6 @@ Este projeto foi criado especialmente para a minha linda esposa Ana Alice! ❤�
 
 ---
 
-**Versão**: 3.0.0  
-**Última atualização**: Dezembro 2025  
+**Versão**: 3.1.0  
+**Última atualização**: 20 de Dezembro de 2025  
 **Desenvolvido com**: HTML, CSS, JavaScript, TailwindCSS, Google Apps Script

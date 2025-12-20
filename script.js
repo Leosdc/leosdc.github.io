@@ -166,33 +166,39 @@ function resetPagination() {
     displayedItems = [];
 }
 
-function formatDate(dateStr) {
-    if (!dateStr) return '';
+/**
+ * Converte uma string de data para um objeto Date válido.
+ * Aceita formatos: DD/MM/AAAA, AAAA-MM-DD (ISO/Input)
+ */
+function toValidDate(dateStr) {
+    if (!dateStr) return null;
+    if (dateStr instanceof Date) return dateStr;
 
+    // Se for formato AAAA-MM-DD
+    if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const [y, m, d] = dateStr.split('-').map(Number);
+        return new Date(y, m - 1, d);
+    }
+
+    // Se for formato DD/MM/AAAA
     if (dateStr.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-        return dateStr;
+        const [d, m, y] = dateStr.split('/').map(Number);
+        return new Date(y, m - 1, d);
     }
 
-    if (dateStr.includes('000Z')) {
-        const parts = dateStr.split('/');
-        if (parts.length === 3) {
-            return `${parts[1]}/${parts[2]}`;
-        }
-    }
+    // Tenta parse genérico (ISO, etc)
+    const parsed = new Date(dateStr);
+    return isNaN(parsed.getTime()) ? null : parsed;
+}
 
-    try {
-        const date = new Date(dateStr);
-        if (!isNaN(date.getTime())) {
-            const day = String(date.getDate()).padStart(2, '0');
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const year = date.getFullYear();
-            return `${day}/${month}/${year}`;
-        }
-    } catch (e) {
-        console.error('Erro ao formatar data:', e);
-    }
+function formatDate(dateStr) {
+    const date = toValidDate(dateStr);
+    if (!date) return dateStr || '';
 
-    return dateStr;
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
 }
 
 async function loadData() {
@@ -272,7 +278,7 @@ async function handleSubmit() {
         pages: formData.pages,
         status: formData.status,
         rating: formData.rating,
-        date: finalDate || new Date().toLocaleDateString('pt-BR'),
+        date: formatDate(formData.date || new Date().toISOString()),
         category: formData.category,
         country: formData.country
     };
@@ -385,18 +391,14 @@ function getFilteredItems() {
 }
 
 function compareDates(dateA, dateB) {
-    if (!dateA) return 1;
-    if (!dateB) return -1;
+    const dA = toValidDate(dateA);
+    const dB = toValidDate(dateB);
 
-    const parseDate = (str) => {
-        const parts = str.split('/');
-        if (parts.length === 3) {
-            return new Date(parts[2], parts[1] - 1, parts[0]);
-        }
-        return new Date(0);
-    };
+    if (!dA && !dB) return 0;
+    if (!dA) return 1;
+    if (!dB) return -1;
 
-    return parseDate(dateA) - parseDate(dateB);
+    return dA.getTime() - dB.getTime();
 }
 
 function getStats() {
