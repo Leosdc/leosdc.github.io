@@ -22,6 +22,14 @@ let loginData = {
     username: '',
     password: ''
 };
+let chatOpen = false;
+let chatMessages = [
+    { role: 'assistant', content: 'Olá! Sou o assistente da Alice. Posso te ajudar a registrar um livro, série ou filme. O que vamos registrar hoje?' }
+];
+let isChatLoading = false;
+let showInsight = false;
+let insightMessage = '';
+let isGeneratingInsight = false;
 let formData = {
     title: '',
     author: '',
@@ -78,6 +86,7 @@ async function handleLogin() {
         if (result.success) {
             currentUser = { username: loginData.username };
             localStorage.setItem('mundoAliceUser', JSON.stringify(currentUser));
+            localStorage.setItem('mundoAlicePass', loginData.password);
             showNotification('✨ Login realizado com sucesso!');
             loadData();
         } else {
@@ -125,6 +134,7 @@ async function handleRegister() {
 
         currentUser = { username: loginData.username };
         localStorage.setItem('mundoAliceUser', JSON.stringify(currentUser));
+        localStorage.setItem('mundoAlicePass', loginData.password);
         showNotification('✨ Cadastro realizado com sucesso!');
         loadData();
     } catch (error) {
@@ -138,10 +148,253 @@ async function handleRegister() {
 function handleLogout() {
     currentUser = null;
     localStorage.removeItem('mundoAliceUser');
+    localStorage.removeItem('mundoAlicePass');
     items = [];
     loginData = { username: '', password: '' };
+    chatOpen = false;
+    chatMessages = [
+        { role: 'assistant', content: 'Olá! Sou o assistente da Alice. Posso te ajudar a registrar um livro, série ou filme. O que vamos registrar hoje?' }
+    ];
     showNotification('Você saiu da conta!');
     renderLogin();
+}
+
+async function callGroqViaGAS(messages) {
+    if (!currentUser) return;
+
+    const password = localStorage.getItem('mundoAlicePass');
+    if (!password) {
+        return '❌ Erro: Senha não salva. Por favor, faça **Logout** e entre novamente na sua conta para ativar o assistente.';
+    }
+
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'callGroq',
+                username: currentUser.username,
+                password: password,
+                messages: messages
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.error) {
+            return `❌ Erro do Servidor: ${result.error}`;
+        }
+
+        return result.choices[0].message.content;
+    } catch (error) {
+        console.error('Erro ao chamar Groq:', error);
+        return 'Desculpe, tive um problema na conexão com o Google Script. Verifique se o link da API no `script.js` está correto e se você publicou uma **Nova Versão** da implantação.';
+    }
+}
+
+async function handleChatSubmit() {
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text || isChatLoading) return;
+
+    input.value = '';
+    chatMessages.push({ role: 'user', content: text });
+    isChatLoading = true;
+    render();
+    scrollChat();
+
+    // Contexto para o bot: Ele deve agir como um assistente de registro.
+    const systemMessage = {
+        role: 'system',
+        content: `Você é o assistente do app "Mundo da Alice". Seu objetivo é ajudar o usuário a registrar Livros, Séries ou Filmes.
+        CAMPOS NECESSÁRIOS: Título, Autor (se for livro), Páginas/Episódios (número), Status (Quero ler/assistir, Lido, Assistido, Desisti), Avaliação (1 a 5 estrelas), Categoria (Livro, Série, Filme), País (Opcional).
+        
+        REGRAS:
+        1. Seja amigável e use emojis.
+        2. Pergunte uma coisa de cada vez.
+        3. Quando tiver TODAS as informações, termine respondendo EXATAMENTE com um JSON no formato: 
+        [[REGISTER_ITEM: {"title": "...", "author": "...", "pages": "...", "status": "...", "rating": "...", "category": "...", "country": "..."}]]
+        
+        Status permitidos: "Quero ler/assistir", "Lido", "Assistido", "Desisti".
+        Avaliações permitidas (converta texto para isso): "Maravilhoso 😍", "Muito bom 😊", "Bom 🙂", "Mais ou menos 🤨", "Ruim 🙁", "Péssimo 😒".
+        Categorias: "Livro", "Série", "Filme".`
+    };
+
+    const response = await callGroqViaGAS([systemMessage, ...chatMessages]);
+
+    // Verifica se o bot enviou o comando de registro
+    if (response.includes('[[REGISTER_ITEM:')) {
+        const jsonMatch = response.match(/\[\[REGISTER_ITEM: (.*?)\]\]/);
+        if (jsonMatch) {
+            try {
+                const itemData = JSON.parse(jsonMatch[1]);
+                chatMessages.push({ role: 'assistant', content: 'Perfeito! Registrei tudo para você. ✨' });
+
+                // Preenche o formulário e salva
+                formData = { ...formData, ...itemData };
+                await handleSubmit();
+
+                isChatLoading = false;
+                render();
+                return;
+            } catch (e) {
+                console.error('Erro ao processar registro do bot:', e);
+            }
+        }
+    }
+
+    chatMessages.push({ role: 'assistant', content: response });
+    isChatLoading = false;
+    render();
+    scrollChat();
+}
+
+function scrollChat() {
+    const container = document.getElementById('chat-container');
+    if (container) {
+        container.scrollTop = container.scrollHeight;
+    }
+}
+
+async function generateInsight() {
+    if (items.length === 0 || isGeneratingInsight) return;
+
+    isGeneratingInsight = true;
+    render();
+
+    const randomItem = items[Math.floor(Math.random() * items.length)];
+    const systemMessage = {
+        role: 'system',
+        content: 'Você é um assistente curioso. O usuário tem uma biblioteca de livros, filmes e séries. Escolha o item fornecido e conte uma curiosidade curta e interessante sobre ele (máximo 2 frases). Responda de forma divertida.'
+    };
+
+    const userMessage = {
+        role: 'user',
+        content: `O item é: "${randomItem.title}" (${randomItem.category}). Conte algo legal sobre ele.`
+    };
+
+    const insight = await callGroqViaGAS([systemMessage, userMessage]);
+    insightMessage = insight;
+    showInsight = true;
+    isGeneratingInsight = false;
+    render();
+
+    // Esconde após 10 segundos
+    setTimeout(() => {
+        showInsight = false;
+        render();
+    }, 10000);
+}
+
+function renderChat() {
+    if (!chatOpen) {
+        return `
+            <button
+                onclick="chatOpen = true; render();"
+                class="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl hover:scale-110 transition-transform z-50"
+                title="Conversar com o assistente"
+            >
+                💬
+            </button>
+        `;
+    }
+
+    return `
+        <div class="fixed bottom-6 right-6 w-80 md:w-96 bg-white rounded-2xl shadow-2xl flex flex-col z-[60] border border-purple-100 overflow-hidden chat-message">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-4 text-white flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">🤖</span>
+                    <div>
+                        <h3 class="font-bold text-sm">Assistente da Alice</h3>
+                        <p class="text-[10px] text-purple-100">Pronto para ajudar! ✨</p>
+                    </div>
+                </div>
+                <button onclick="chatOpen = false; render();" class="hover:bg-white/20 p-1 rounded-lg transition-colors">
+                    ✕
+                </button>
+            </div>
+
+            <!-- Messages -->
+            <div id="chat-container" class="h-80 overflow-y-auto p-4 space-y-3 bg-gray-50/50 chat-scroll">
+                ${chatMessages.map(msg => `
+                    <div class="flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}">
+                        <div class="max-w-[80%] p-3 rounded-2xl text-sm chat-message ${msg.role === 'user'
+            ? 'bg-purple-600 text-white rounded-tr-none'
+            : 'bg-white text-gray-800 border border-gray-100 shadow-sm rounded-tl-none'
+        }">
+                            ${msg.content}
+                        </div>
+                    </div>
+                `).join('')}
+                ${isChatLoading ? `
+                    <div class="flex justify-start">
+                        <div class="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 rounded-tl-none">
+                            <span class="flex gap-1">
+                                <span class="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"></span>
+                                <span class="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce [animation-delay:0.2s]"></span>
+                                <span class="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce [animation-delay:0.4s]"></span>
+                            </span>
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+
+            <!-- Input -->
+            <div class="p-3 bg-white border-t border-gray-100">
+                <div class="flex gap-2">
+                    <input
+                        type="text"
+                        id="chat-input"
+                        placeholder="Digite sua mensagem..."
+                        onkeypress="if(event.key === 'Enter') handleChatSubmit();"
+                        class="flex-1 px-3 py-2 bg-gray-100 border-none rounded-xl text-sm focus:ring-2 focus:ring-purple-500"
+                        ${isChatLoading ? 'disabled' : ''}
+                    />
+                    <button
+                        onclick="handleChatSubmit();"
+                        class="p-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors disabled:opacity-50"
+                        ${isChatLoading ? 'disabled' : ''}
+                    >
+                        🚀
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderInsight() {
+    if (!showInsight && !isGeneratingInsight) {
+        return `
+            <button
+                onclick="generateInsight();"
+                class="fixed bottom-6 left-6 px-4 py-2 bg-white text-purple-600 rounded-full shadow-lg border border-purple-100 flex items-center gap-2 hover:scale-105 transition-transform z-50 text-sm font-medium"
+            >
+                ✨ Me conte uma curiosidade
+            </button>
+        `;
+    }
+
+    if (isGeneratingInsight) {
+        return `
+            <div class="fixed bottom-6 left-6 px-4 py-2 bg-white text-purple-600 rounded-full shadow-lg border border-purple-100 flex items-center gap-2 z-50 text-sm font-medium chat-message">
+                ✨ Pensando em algo legal...
+            </div>
+        `;
+    }
+
+    return `
+        <div class="fixed bottom-6 left-6 max-w-xs bg-white p-4 rounded-2xl shadow-2xl border border-purple-100 z-50 chat-message">
+            <div class="flex items-start gap-3">
+                <span class="text-xl">💡</span>
+                <div>
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Você sabia?</h4>
+                    <p class="text-sm text-gray-700 leading-relaxed">${insightMessage}</p>
+                </div>
+                <button onclick="showInsight = false; render();" class="text-gray-400 hover:text-gray-600">✕</button>
+            </div>
+        </div>
+    `;
 }
 
 function performSearch() {
@@ -1002,6 +1255,9 @@ function render() {
                 ` : ''}
             </div>
         </div>
+
+        ${renderChat()}
+        ${renderInsight()}
     `;
 
     const input = document.getElementById('searchInput');
@@ -1032,38 +1288,38 @@ if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
 
         const swCode = `
-            const CACHE_NAME = 'biblioteca-v3';
-            
-            self.addEventListener('install', (e) => {
-                self.skipWaiting();
-                e.waitUntil(
-                    caches.open(CACHE_NAME).then((cache) => {
-                        return cache.addAll(['./', './biblioteca.html', './style.css', './script.js']);
-                    })
-                );
-            });
-            
-            self.addEventListener('activate', (e) => {
-                e.waitUntil(
-                    caches.keys().then((keyList) => {
-                        return Promise.all(keyList.map((key) => {
-                            if (key !== CACHE_NAME) {
-                                return caches.delete(key);
-                            }
-                        }));
-                    })
-                );
-                return self.clients.claim();
-            });
-            
-            self.addEventListener('fetch', (e) => {
-                e.respondWith(
-                    caches.match(e.request).then((response) => {
-                        return response || fetch(e.request);
-                    })
-                );
-            });
-        `;
+    const CACHE_NAME = 'biblioteca-v3';
+
+    self.addEventListener('install', (e) => {
+        self.skipWaiting();
+        e.waitUntil(
+            caches.open(CACHE_NAME).then((cache) => {
+                return cache.addAll(['./', './biblioteca.html', './style.css', './script.js']);
+            })
+        );
+    });
+
+    self.addEventListener('activate', (e) => {
+        e.waitUntil(
+            caches.keys().then((keyList) => {
+                return Promise.all(keyList.map((key) => {
+                    if (key !== CACHE_NAME) {
+                        return caches.delete(key);
+                    }
+                }));
+            })
+        );
+        return self.clients.claim();
+    });
+
+    self.addEventListener('fetch', (e) => {
+        e.respondWith(
+            caches.match(e.request).then((response) => {
+                return response || fetch(e.request);
+            })
+        );
+    });
+    `;
 
         const blob = new Blob([swCode], { type: 'application/javascript' });
         const swUrl = URL.createObjectURL(blob);

@@ -42,6 +42,11 @@ App que fiz para minha esposa organizar e gerenciar livros, séries e filmes!
 - **Tempo Real**: Alterações refletidas instantaneamente
 - **Backup Automático**: Seus dados sempre seguros na nuvem
 
+### 🤖 Inteligência Artificial (Groq)
+- **Assistente de Chat**: Registre livros, filmes ou séries conversando com o bot
+- **IA Curiosa**: Receba fatos e curiosidades sobre os itens da sua biblioteca
+- **Segurança de API**: Chave do Groq escondida com segurança no Google Apps Script
+
 ## 🚀 Como Usar
 
 ### 1. Preparação do Google Sheets
@@ -80,6 +85,12 @@ Usuario | Título | Autor | Nº Páginas | Episódios | Status | Avaliação | D
 3. Configure como "Executar como: Eu" e "Acesso: Qualquer pessoa"
 4. Copie a URL gerada
 
+#### c) Configurar API Key do Groq
+1. No Apps Script, vá em **Configurações do Projeto (engrenagem)**
+2. Procure por **Propriedades do script**
+3. Adicione uma propriedade com nome `GROQ_API_KEY` e cole sua chave do Groq
+4. Execute a função `doPost` uma vez para autorizar chamadas externas (`UrlFetchApp`)
+
 ### 3. Configuração do Arquivo HTML
 
 A partir da versão 3.0, o projeto é modular.
@@ -117,6 +128,6 @@ Este projeto foi criado especialmente para a minha linda esposa Ana Alice! ❤�
 
 ---
 
-**Versão**: 3.1.0  
-**Última atualização**: 20 de Dezembro de 2025  
-**Desenvolvido com**: HTML, CSS, JavaScript, TailwindCSS, Google Apps Script
+**Versão**: 4.0.0  
+**Última atualização**: 21 de Dezembro de 2025  
+**Desenvolvido com**: HTML, CSS, JavaScript, TailwindCSS, Google Apps Script, Groq API

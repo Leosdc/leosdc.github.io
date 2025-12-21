@@ -2,6 +2,18 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
+## [4.0.0] - Dezembro 2025
+
+### Adicionado
+- **Assistente de Chat (IA)**: Integração com a API do Groq (`llama-3.3-70b-versatile`) para registro de itens através de conversação.
+- **Bolha de Curiosidades**: Sistema que gera fatos interessantes sobre os itens da sua biblioteca usando IA.
+- **Segurança Backend**: Proxy seguro via Google Apps Script para proteger a API Key do Groq.
+- **Interface**: Novos botões flutuantes e animações para o chat e bolha de insights.
+
+### Corrigido
+- **Quebra de Texto**: Ajustado o CSS para evitar que mensagens longas saiam do balão de chat.
+- **Autenticação**: Agora o sistema exige usuário e senha salvos localmente para permitir chamadas à IA.
+
 ## [3.1.0] - 2025-12-20
 
 ### Corrigido

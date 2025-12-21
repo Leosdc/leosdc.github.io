@@ -2,6 +2,24 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
+@keyframes slideIn {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.chat-message {
+    animation: slideIn 0.3s ease-out;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
 .loading {
     display: inline-block;
     width: 20px;
@@ -16,4 +34,22 @@ body {
     to {
         transform: rotate(360deg);
     }
+}
+
+/* Custom scrollbar for chat */
+.chat-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.chat-scroll::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 10px;
+}
+
+.chat-scroll::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e1;
 }
