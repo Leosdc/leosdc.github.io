@@ -248,7 +248,7 @@ async function handleChatSubmit() {
         if (jsonMatch) {
             try {
                 const itemData = JSON.parse(jsonMatch[1]);
-                
+
                 // Sanitização da avaliação
                 if (itemData.rating) {
                     itemData.rating = sanitizeRating(itemData.rating);
@@ -262,6 +262,8 @@ async function handleChatSubmit() {
 
                 isChatLoading = false;
                 render();
+                // Garante que o chat role para baixo após o registro forçado pelo bot
+                setTimeout(scrollChat, 100);
                 return;
             } catch (e) {
                 console.error('Erro ao processar registro do bot:', e);
@@ -285,7 +287,7 @@ async function handleSuggestionRequest() {
 
     // Prepara o histórico para o prompt
     const history = items.slice(0, 20).map(item => `- ${item.category}: ${item.title} (${item.rating || 'Sem avaliação'})`).join('\n');
-    
+
     const suggestionPrompt = {
         role: 'system',
         content: `Você é um curador especialista em entretenimento. Com base no histórico de leitura/visualização do usuário, sugira UM item (Livro, Filme ou Série) que ele provavelmente adoraria.
@@ -302,7 +304,7 @@ async function handleSuggestionRequest() {
     };
 
     const response = await callGroqViaGAS([suggestionPrompt]);
-    
+
     chatMessages.push({ role: 'assistant', content: response });
     isChatLoading = false;
     render();
