@@ -2,6 +2,15 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
+## [4.2.0] - 2025-12-22
+
+### Adicionado
+- **Funcionalidade de Sugestões**: Novo botão "Sugerir algo 🪄" no assistente de chat. A IA agora analisa seu histórico de leitura/visualização e sugere novos títulos com sinopse e motivo da recomendação.
+
+### Corrigido
+- **Padronização de Avaliações**: Implementada sanitização automática para avaliações via IA. Mesmo que o assistente esqueça o emoji, o sistema agora garante o formato correto (ex: "Bom" vira "Bom 🙂").
+- **Instruções da IA**: Reforço no sistema para que a IA sempre siga estritamente o formato de avaliação com emoji.
+
 ## [4.1.0] - 2025-12-22
 
 ### Adicionado

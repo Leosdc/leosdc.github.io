@@ -215,11 +215,32 @@ async function handleChatSubmit() {
         [[REGISTER_ITEM: {"title": "...", "author": "...", "pages": "...", "status": "...", "rating": "...", "date": "...", "category": "...", "country": "..."}]]
         
         Status permitidos: "Quero ler/assistir", "Lido", "Assistido", "Desisti".
-        Avaliações permitidas (converta texto para isso): "Maravilhoso 😍", "Muito bom 😊", "Bom 🙂", "Mais ou menos 🤨", "Ruim 🙁", "Péssimo 😒".
+        Avaliações permitidas (USE EXATAMENTE ASSIM, COM O EMOJI): "Maravilhoso 😍", "Muito bom 😊", "Bom 🙂", "Mais ou menos 🤨", "Ruim 🙁", "Péssimo 😒".
         Categorias: "Livro", "Série", "Filme".`
     };
 
     const response = await callGroqViaGAS([systemMessage, ...chatMessages]);
+
+    // Função para garantir que a avaliação tenha o emoji correto
+    const sanitizeRating = (rating) => {
+        const ratingMap = {
+            'Maravilhoso': 'Maravilhoso 😍',
+            'Muito bom': 'Muito bom 😊',
+            'Bom': 'Bom 🙂',
+            'Mais ou menos': 'Mais ou menos 🤨',
+            'Ruim': 'Ruim 🙁',
+            'Péssimo': 'Péssimo 😒'
+        };
+        // Se já tem emoji ou não está no mapa, retorna como está
+        if (!rating) return rating;
+        for (const [key, value] of Object.entries(ratingMap)) {
+            if (rating.toLowerCase().includes(key.toLowerCase()) && !rating.includes(' ')) {
+                // Se a IA enviou apenas a palavra (ou algo sem espaço+emoji), tenta corrigir
+                return value;
+            }
+        }
+        return rating;
+    };
 
     // Verifica se o bot enviou o comando de registro
     if (response.includes('[[REGISTER_ITEM:')) {
@@ -227,6 +248,12 @@ async function handleChatSubmit() {
         if (jsonMatch) {
             try {
                 const itemData = JSON.parse(jsonMatch[1]);
+                
+                // Sanitização da avaliação
+                if (itemData.rating) {
+                    itemData.rating = sanitizeRating(itemData.rating);
+                }
+
                 chatMessages.push({ role: 'assistant', content: 'Perfeito! Registrei tudo para você. ✨' });
 
                 // Preenche o formulário e salva
@@ -242,6 +269,40 @@ async function handleChatSubmit() {
         }
     }
 
+    chatMessages.push({ role: 'assistant', content: response });
+    isChatLoading = false;
+    render();
+    scrollChat();
+}
+
+async function handleSuggestionRequest() {
+    if (isChatLoading) return;
+
+    isChatLoading = true;
+    chatMessages.push({ role: 'assistant', content: 'Deixa eu ver o que você já gostou... Analisando seu histórico para uma sugestão especial! 🧐✨' });
+    render();
+    scrollChat();
+
+    // Prepara o histórico para o prompt
+    const history = items.slice(0, 20).map(item => `- ${item.category}: ${item.title} (${item.rating || 'Sem avaliação'})`).join('\n');
+    
+    const suggestionPrompt = {
+        role: 'system',
+        content: `Você é um curador especialista em entretenimento. Com base no histórico de leitura/visualização do usuário, sugira UM item (Livro, Filme ou Série) que ele provavelmente adoraria.
+        
+        HISTÓRICO RECENTE:
+        ${history}
+
+        REGRAS:
+        1. Sugira apenas UM item.
+        2. Explique brevemente (sinopse) por que você acha que ele vai gostar.
+        3. Seja entusiasmado e use emojis.
+        4. NÃO sugira algo que já está no histórico.
+        5. Formate a resposta como: "Minha sugestão: **[NOME]**\n\n**Sinopse:** [SINOPSE CURTA]\n\n**Por que você vai amar:** [MOTIVO]"`
+    };
+
+    const response = await callGroqViaGAS([suggestionPrompt]);
+    
     chatMessages.push({ role: 'assistant', content: response });
     isChatLoading = false;
     render();
@@ -341,6 +402,15 @@ function renderChat() {
 
             <!-- Input -->
             <div class="p-3 bg-white border-t border-gray-100">
+                <div class="flex gap-2 mb-2">
+                    <button 
+                        onclick="handleSuggestionRequest();"
+                        class="flex-1 py-1.5 px-3 bg-purple-50 text-purple-600 rounded-lg text-xs font-semibold hover:bg-purple-100 transition-colors flex items-center justify-center gap-1 border border-purple-100"
+                        ${isChatLoading ? 'disabled' : ''}
+                    >
+                        <span>Sugerir algo 🪄</span>
+                    </button>
+                </div>
                 <div class="flex gap-2">
                     <input
                         type="text"
