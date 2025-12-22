@@ -206,13 +206,13 @@ async function handleChatSubmit() {
     const systemMessage = {
         role: 'system',
         content: `Você é o assistente do app "Mundo da Alice". Seu objetivo é ajudar o usuário a registrar Livros, Séries ou Filmes.
-        CAMPOS NECESSÁRIOS: Título, Autor (se for livro), Páginas/Episódios (número), Status (Quero ler/assistir, Lido, Assistido, Desisti), Avaliação (1 a 5 estrelas), Categoria (Livro, Série, Filme), País (Opcional).
+        CAMPOS NECESSÁRIOS: Título, Autor (se for livro), Páginas/Episódios (número), Status (Quero ler/assistir, Lido, Assistido, Desisti), Avaliação, Data (em formato DD/MM/AAAA), Categoria (Livro, Série, Filme), País (Opcional).
         
         REGRAS:
         1. Seja amigável e use emojis.
-        2. Pergunte uma coisa de cada vez.
+        2. Pergunte uma coisa de cada vez. IMPORTANTE: Pergunte a data de leitura/assistência e peça para o usuário digitar no formato DD/MM/AAAA.
         3. Quando tiver TODAS as informações, termine respondendo EXATAMENTE com um JSON no formato: 
-        [[REGISTER_ITEM: {"title": "...", "author": "...", "pages": "...", "status": "...", "rating": "...", "category": "...", "country": "..."}]]
+        [[REGISTER_ITEM: {"title": "...", "author": "...", "pages": "...", "status": "...", "rating": "...", "date": "...", "category": "...", "country": "..."}]]
         
         Status permitidos: "Quero ler/assistir", "Lido", "Assistido", "Desisti".
         Avaliações permitidas (converta texto para isso): "Maravilhoso 😍", "Muito bom 😊", "Bom 🙂", "Mais ou menos 🤨", "Ruim 🙁", "Péssimo 😒".
@@ -278,11 +278,11 @@ async function generateInsight() {
     isGeneratingInsight = false;
     render();
 
-    // Esconde após 10 segundos
+    // Esconde após 30 segundos
     setTimeout(() => {
         showInsight = false;
         render();
-    }, 10000);
+    }, 30000);
 }
 
 function renderChat() {
@@ -531,7 +531,7 @@ async function handleSubmit() {
         pages: formData.pages,
         status: formData.status,
         rating: formData.rating,
-        date: formatDate(formData.date || new Date().toISOString()),
+        date: formData.date ? formatDate(formData.date) : '',
         category: formData.category,
         country: formData.country
     };
@@ -566,9 +566,12 @@ function handleEdit(index) {
 
     let formattedDate = '';
     if (item.date) {
-        const parts = item.date.split('/');
-        if (parts.length === 3) {
-            formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        const dateObj = toValidDate(item.date);
+        if (dateObj) {
+            const y = dateObj.getFullYear();
+            const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const d = String(dateObj.getDate()).padStart(2, '0');
+            formattedDate = `${y}-${m}-${d}`;
         }
     }
 

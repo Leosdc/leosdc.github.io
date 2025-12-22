@@ -2,6 +2,19 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
+## [4.1.0] - 2025-12-22
+
+### Adicionado
+- **Prompt IA Aprimorado**: O assistente agora solicita explicitamente a data de leitura/assistência no formato `DD/MM/AAAA`.
+- **Labels de Avaliação**: Emojis de avaliação atualizados para corresponder à interface do usuário (`Mais ou menos 🤨` e `Péssimo 😒`).
+
+### Alterado
+- **Curiosidades**: O tempo de exibição do balão de curiosidades foi aumentado de 10 para 30 segundos.
+
+### Corrigido
+- **Edição de Itens**: Corrigido bug onde os campos de **Data** e **Avaliação** apareciam vazios ao tentar editar um item. A lógica de conversão de data agora é mais robusta.
+- **Data Padrão**: O formulário agora respeita quando uma data é deixada vazia, em vez de preencher automaticamente com a data de hoje.
+
 ## [4.0.0] - Dezembro 2025
 
 ### Adicionado
