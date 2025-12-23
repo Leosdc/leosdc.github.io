@@ -847,25 +847,8 @@ function renderLogin() {
         <div class="min-h-screen flex items-center justify-center p-4">
             <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
                 <div class="text-center mb-8">
-                    <div class="text-6xl mb-4">
-                        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' class="w-20 h-20 mx-auto">
-                            <defs>
-                                <linearGradient id='gradLogin' x1='0%' y1='0%' x2='100%' y2='100%'>
-                                    <stop offset='0%' style='stop-color:#9333ea;stop-opacity:1' />
-                                    <stop offset='100%' style='stop-color:#ec4899;stop-opacity:1' />
-                                </linearGradient>
-                            </defs>
-                            <path d='M30 25 L30 75 L50 70 L50 20 Z' fill='#f3e5f5' stroke='url(#gradLogin)' stroke-width='1.5'/>
-                            <path d='M50 20 L50 70 L70 75 L70 25 Z' fill='#fce4ec' stroke='url(#gradLogin)' stroke-width='1.5'/>
-                            <rect x='48' y='20' width='4' height='50' fill='url(#gradLogin)'/>
-                            <circle cx='25' cy='20' r='2' fill='#ffd700' opacity='0.9'/>
-                            <circle cx='75' cy='30' r='1.5' fill='#ffd700' opacity='0.8'/>
-                            <circle cx='35' cy='15' r='1' fill='#ffd700' opacity='0.7'/>
-                            <circle cx='65' cy='18' r='1.2' fill='#ffd700' opacity='0.85'/>
-                            <path d='M20 30 L21 32 L20 34 L19 32 Z' fill='#ffd700' opacity='0.9'/>
-                            <path d='M78 40 L79 42 L78 44 L77 42 Z' fill='#ffd700' opacity='0.8'/>
-                            <path d='M50 12 L51 14 L50 16 L49 14 Z' fill='#ffd700' opacity='0.95'/>
-                        </svg>
+                    <div class="mb-4">
+                        <img src="icon.png" alt="Mundo da Alice" class="w-24 h-24 mx-auto">
                     </div>
                     <h1 class="text-3xl font-bold text-gray-800 mb-2 app-title">Mundo da Alice</h1>
                     <p class="text-gray-600 italic">"${currentQuote.quote}"</p>
@@ -1389,7 +1372,7 @@ function render() {
             <div class="absolute inset-0 bg-cover bg-center opacity-60 splash-bg"></div>
             <div class="absolute inset-0 bg-gradient-to-b from-transparent to-black/80"></div>
             <div class="relative text-center px-4 animate-fade-in">
-                <div class="text-7xl mb-6 drop-shadow-2xl animate-bounce">📚</div>
+                <img src="icon.png" alt="Mundo da Alice" class="w-32 h-32 mx-auto mb-6 drop-shadow-2xl animate-bounce">
                 <h1 class="text-5xl md:text-7xl font-extrabold text-white tracking-tighter drop-shadow-2xl">
                     <span class="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400">
                         Mundo da Alice
