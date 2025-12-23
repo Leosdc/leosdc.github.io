@@ -1395,7 +1395,9 @@ function render() {
 }
 
 // Splash Screen Logic
-if (isSplashActive) {
+function initSplashScreen() {
+    if (!isSplashActive) return;
+
     setTimeout(() => {
         const splash = document.getElementById('splashScreen');
         if (splash) {
@@ -1404,9 +1406,14 @@ if (isSplashActive) {
                 isSplashActive = false;
                 render();
             }, 800);
+        } else {
+            // Se o elemento não for encontrado (ex: render demorou), tenta novamente em breve
+            setTimeout(initSplashScreen, 500);
         }
     }, 2500);
 }
+
+initSplashScreen();
 
 checkSavedLogin();
 
