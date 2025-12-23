@@ -2,6 +2,11 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
+.app-title {
+    font-family: 'Cinzel', serif;
+    letter-spacing: 0.05em;
+}
+
 @keyframes slideIn {
     from {
         transform: translateY(20px);

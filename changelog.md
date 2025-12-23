@@ -2,6 +2,16 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
+## [4.6.0] - 2025-12-23
+
+### Adicionado
+- **Ícone Personalizado**: Novo ícone SVG customizado com design de livro mágico, gradiente roxo-rosa e estrelas douradas, substituindo o emoji genérico.
+- **Tipografia Premium**: Fonte Cinzel (Google Fonts) aplicada ao título "Mundo da Alice" para um visual mais elegante e literário.
+
+### Alterado
+- **Identidade Visual**: Todos os ícones (favicon, PWA, Apple Touch) agora usam o design customizado.
+- **Tela de Login**: Ícone SVG animado substituiu o emoji na tela de entrada.
+
 ## [4.5.0] - 2025-12-23
 
 ### Adicionado

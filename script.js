@@ -847,8 +847,27 @@ function renderLogin() {
         <div class="min-h-screen flex items-center justify-center p-4">
             <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
                 <div class="text-center mb-8">
-                    <div class="text-6xl mb-4">📚</div>
-                    <h1 class="text-3xl font-bold text-gray-800 mb-2">Mundo da Alice</h1>
+                    <div class="text-6xl mb-4">
+                        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' class="w-20 h-20 mx-auto">
+                            <defs>
+                                <linearGradient id='gradLogin' x1='0%' y1='0%' x2='100%' y2='100%'>
+                                    <stop offset='0%' style='stop-color:#9333ea;stop-opacity:1' />
+                                    <stop offset='100%' style='stop-color:#ec4899;stop-opacity:1' />
+                                </linearGradient>
+                            </defs>
+                            <path d='M30 25 L30 75 L50 70 L50 20 Z' fill='#f3e5f5' stroke='url(#gradLogin)' stroke-width='1.5'/>
+                            <path d='M50 20 L50 70 L70 75 L70 25 Z' fill='#fce4ec' stroke='url(#gradLogin)' stroke-width='1.5'/>
+                            <rect x='48' y='20' width='4' height='50' fill='url(#gradLogin)'/>
+                            <circle cx='25' cy='20' r='2' fill='#ffd700' opacity='0.9'/>
+                            <circle cx='75' cy='30' r='1.5' fill='#ffd700' opacity='0.8'/>
+                            <circle cx='35' cy='15' r='1' fill='#ffd700' opacity='0.7'/>
+                            <circle cx='65' cy='18' r='1.2' fill='#ffd700' opacity='0.85'/>
+                            <path d='M20 30 L21 32 L20 34 L19 32 Z' fill='#ffd700' opacity='0.9'/>
+                            <path d='M78 40 L79 42 L78 44 L77 42 Z' fill='#ffd700' opacity='0.8'/>
+                            <path d='M50 12 L51 14 L50 16 L49 14 Z' fill='#ffd700' opacity='0.95'/>
+                        </svg>
+                    </div>
+                    <h1 class="text-3xl font-bold text-gray-800 mb-2 app-title">Mundo da Alice</h1>
                     <p class="text-gray-600 italic">"${currentQuote.quote}"</p>
                     <p class="text-xs text-gray-400 mt-1">— ${currentQuote.book}</p>
                 </div>
@@ -935,7 +954,7 @@ function render() {
         <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 shadow-lg">
             <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center text-center md:text-left gap-4">
                 <div class="flex-1">
-                    <h1 class="text-3xl font-bold mb-1">Mundo da Alice</h1>
+                    <h1 class="text-3xl font-bold mb-1 app-title">Mundo da Alice</h1>
                     <p class="text-purple-100 text-sm italic">"${currentQuote.quote}"</p>
                     <p class="text-[10px] text-purple-200">— ${currentQuote.book}</p>
                     ${loading ? '<p class="text-purple-200 mt-2 flex items-center justify-center md:justify-start gap-2"><span class="loading"></span> Carregando...</p>' : ''}
