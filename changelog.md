@@ -2,16 +2,16 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
-## [4.4.0] - 2025-12-23
+## [4.5.0] - 2025-12-23
 
 ### Adicionado
-- **Recap "Seu Resumo"**: Novo modal de estatísticas pessoais ("Recap") que exibe o total de registros, itens concluídos, avaliação mais usada, categoria favorita e um gráfico visual de distribuição por categoria. Um resumo premium da jornada literária/cinematográfica do usuário.
+- **Recap Anual**: O modal de Recap agora permite filtrar as estatísticas por ano. Foi adicionado um seletor de anos dinâmico que detecta todos os anos presentes na sua biblioteca.
+- **Gráficos e Estatísticas Melhores**: O Recap agora exibe o número exato de itens acima das barras de categoria e as barras possuem um design mais robusto com sombras e cores vibrantes.
 
-### Melhorado
-- **Layout Mobile**: Interface do cabeçalho totalmente otimizada para dispositivos móveis. O título, a citação dinâmica e as informações do usuário agora são centralizados em telas pequenas, proporcionando uma navegação mais intuitiva e limpa.
+### Alterado
+- **Interface**: O botão de fechar do Recap foi renomeado de "Continuar Lendo" para apenas "Continuar", tornando a navegação mais direta.
 
-### Corrigido
-- **Estabilidade do Render**: Corrigidos erros de sintaxe críticos no template literal da função de renderização que impediam o carregamento da página em certas condições.
+## [4.4.0] - 2025-12-23
 
 ## [4.3.0] - 2025-12-23
 

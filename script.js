@@ -60,6 +60,7 @@ let formData = {
 const statusOptions = ['Quero ler/assistir', 'Lido', 'Assistido', 'Desisti'];
 const ratingOptions = ['Maravilhoso 😍', 'Muito bom 😊', 'Bom 🙂', 'Mais ou menos 🤨', 'Ruim 🙁', 'Péssimo 😒'];
 let showRecapModal = false;
+let recapYear = new Date().getFullYear();
 
 const categoryOptions = ['Livro', 'Série', 'Filme'];
 const countryOptions = ['Brasil', 'Coreia do Sul', 'China', 'Japão', 'Taiwan', 'Tailândia', 'Estados Unidos', 'Outro'];
@@ -1408,11 +1409,18 @@ function render() {
 
 function handleRecap() {
     showRecapModal = true;
+    recapYear = new Date().getFullYear();
     render();
 }
 
 function getRecapData() {
-    const completedItems = items.filter(i => i.status === 'Lido' || i.status === 'Assistido');
+    const yearItems = items.filter(i => {
+        if (!i.date) return false;
+        const d = new Date(i.date);
+        return d.getFullYear() === parseInt(recapYear);
+    });
+
+    const completedItems = yearItems.filter(i => i.status === 'Lido' || i.status === 'Assistido');
 
     // Most used rating
     const ratings = completedItems.map(i => i.rating).filter(r => r);
@@ -1420,19 +1428,24 @@ function getRecapData() {
     ratings.forEach(r => ratingCounts[r] = (ratingCounts[r] || 0) + 1);
     const mostUsedRating = Object.entries(ratingCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Nenhuma ainda';
 
-    // Totals
-    const stats = getStats();
-
     // Favorite Category
     const categoryCounts = {};
     completedItems.forEach(i => categoryCounts[i.category] = (categoryCounts[i.category] || 0) + 1);
     const favoriteCategory = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Nenhuma ainda';
 
-    return {
-        ...stats,
-        mostUsedRating,
-        favoriteCategory,
+    // Stats for the year
+    const yearStats = {
+        total: yearItems.length,
+        books: yearItems.filter(i => i.category === 'Livro').length,
+        series: yearItems.filter(i => i.category === 'Série').length,
+        movies: yearItems.filter(i => i.category === 'Filme').length,
         completedItemsCount: completedItems.length
+    };
+
+    return {
+        ...yearStats,
+        mostUsedRating,
+        favoriteCategory
     };
 }
 
@@ -1440,6 +1453,9 @@ function renderRecapModal() {
     if (!showRecapModal) return '';
 
     const data = getRecapData();
+    const currentYear = new Date().getFullYear();
+    const availableYears = [...new Set(items.filter(i => i.date).map(i => new Date(i.date).getFullYear()))].sort((a, b) => b - a);
+    if (!availableYears.includes(currentYear)) availableYears.unshift(currentYear);
 
     return `
         <div class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
@@ -1451,19 +1467,28 @@ function renderRecapModal() {
                     >✕</button>
                     <div class="text-center">
                         <div class="text-5xl mb-4">✨</div>
-                        <h2 class="text-3xl font-bold">Seu Recap</h2>
-                        <p class="text-purple-100 opacity-90 mt-2">Um resumo da sua jornada no Mundo da Alice</p>
+                        <h2 class="text-3xl font-bold">Resumo ${recapYear}</h2>
+                        
+                        <!-- Ano Selector -->
+                        <div class="mt-4 inline-flex items-center gap-2 bg-white/20 p-1 rounded-xl backdrop-blur-md">
+                            <select 
+                                onchange="recapYear = this.value; render();"
+                                class="bg-transparent text-white font-bold outline-none cursor-pointer px-3 py-1"
+                            >
+                                ${availableYears.map(y => `<option value="${y}" ${y == recapYear ? 'selected' : ''} class="text-gray-800">${y}</option>`).join('')}
+                            </select>
+                        </div>
                     </div>
                 </div>
                 
                 <div class="p-6 md:p-8 overflow-y-auto space-y-6">
                     <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-purple-50 p-4 rounded-2xl text-center">
+                        <div class="bg-purple-50 p-4 rounded-2xl text-center border border-purple-100">
                             <div class="text-3xl mb-1">📚</div>
                             <div class="text-2xl font-bold text-purple-700">${data.total}</div>
                             <div class="text-xs text-purple-600 uppercase font-bold tracking-wider">Registros</div>
                         </div>
-                        <div class="bg-pink-50 p-4 rounded-2xl text-center">
+                        <div class="bg-pink-50 p-4 rounded-2xl text-center border border-pink-100">
                             <div class="text-3xl mb-1">✅</div>
                             <div class="text-2xl font-bold text-pink-700">${data.completedItemsCount}</div>
                             <div class="text-xs text-pink-600 uppercase font-bold tracking-wider">Concluídos</div>
@@ -1471,7 +1496,7 @@ function renderRecapModal() {
                     </div>
 
                     <div class="space-y-4">
-                        <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl">
+                        <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
                             <div class="text-3xl">⭐</div>
                             <div>
                                 <div class="text-sm text-gray-500">Avaliação mais usada</div>
@@ -1479,7 +1504,7 @@ function renderRecapModal() {
                             </div>
                         </div>
 
-                        <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl">
+                        <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
                             <div class="text-3xl">❤️</div>
                             <div>
                                 <div class="text-sm text-gray-500">Categoria Favorita</div>
@@ -1488,23 +1513,33 @@ function renderRecapModal() {
                         </div>
                     </div>
 
+                    ${data.total > 0 ? `
                     <div class="pt-4">
                         <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4 text-center">Por Categoria</h3>
                         <div class="flex justify-around items-end h-32 px-4 text-center">
                             <div class="flex flex-col items-center gap-2 w-full">
-                                <div class="w-full max-w-[40px] bg-blue-500 rounded-t-lg transition-all duration-1000" style="height: ${(data.books / data.total || 0) * 100}%"></div>
-                                <div class="text-xs font-bold text-gray-600">Livros</div>
+                                <div class="w-full max-w-[40px] bg-blue-500 rounded-t-lg transition-all duration-1000 shadow-lg" style="height: ${(data.books / data.total) * 100}%"></div>
+                                <div class="text-[10px] font-bold text-gray-500 uppercase">${data.books}</div>
+                                <div class="text-xs font-bold text-gray-700">Livros</div>
                             </div>
                             <div class="flex flex-col items-center gap-2 w-full">
-                                <div class="w-full max-w-[40px] bg-pink-500 rounded-t-lg transition-all duration-1000" style="height: ${(data.series / data.total || 0) * 100}%"></div>
-                                <div class="text-xs font-bold text-gray-600">Séries</div>
+                                <div class="w-full max-w-[40px] bg-pink-500 rounded-t-lg transition-all duration-1000 shadow-lg" style="height: ${(data.series / data.total) * 100}%"></div>
+                                <div class="text-[10px] font-bold text-gray-500 uppercase">${data.series}</div>
+                                <div class="text-xs font-bold text-gray-700">Séries</div>
                             </div>
                             <div class="flex flex-col items-center gap-2 w-full">
-                                <div class="w-full max-w-[40px] bg-yellow-500 rounded-t-lg transition-all duration-1000" style="height: ${(data.movies / data.total || 0) * 100}%"></div>
-                                <div class="text-xs font-bold text-gray-600">Filmes</div>
+                                <div class="w-full max-w-[40px] bg-yellow-500 rounded-t-lg transition-all duration-1000 shadow-lg" style="height: ${(data.movies / data.total) * 100}%"></div>
+                                <div class="text-[10px] font-bold text-gray-500 uppercase">${data.movies}</div>
+                                <div class="text-xs font-bold text-gray-700">Filmes</div>
                             </div>
                         </div>
                     </div>
+                    ` : `
+                    <div class="text-center py-8 text-gray-400">
+                        <div class="text-4xl mb-2">🏜️</div>
+                        <p>Nenhum registro encontrado em ${recapYear}</p>
+                    </div>
+                    `}
                 </div>
 
                 <div class="p-6 bg-gray-50 border-t flex justify-center">
@@ -1512,7 +1547,7 @@ function renderRecapModal() {
                         onclick="showRecapModal = false; render();"
                         class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
                     >
-                        Continuar Lendo
+                        Continuar
                     </button>
                 </div>
             </div>
