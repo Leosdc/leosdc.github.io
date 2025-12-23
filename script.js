@@ -1475,7 +1475,7 @@ function renderRecapModal() {
                         <!-- Ano Selector -->
                         <div class="mt-4 inline-flex items-center gap-2 bg-white/20 p-1 rounded-xl backdrop-blur-md">
                             <select 
-                                onchange="recapYear = this.value; render();"
+                                onchange="recapYear = parseInt(this.value); render();"
                                 class="bg-transparent text-white font-bold outline-none cursor-pointer px-3 py-1"
                             >
                                 ${availableYears.map(y => `<option value="${y}" ${y == recapYear ? 'selected' : ''} class="text-gray-800">${y}</option>`).join('')}
