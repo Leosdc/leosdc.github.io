@@ -2,6 +2,12 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
+## [4.3.0] - 2025-12-23
+
+### Adicionado
+- **Legenda Dinâmica**: O app agora exibe uma citação literária aleatória toda vez que é carregado, com frases de clássicos como *O Pequeno Príncipe*, *Harry Potter* e *Alice no País das Maravilhas*.
+- **Tela de Abertura (Splash Screen)**: Nova tela de carregamento animada com fundo artístico de estante de livros, proporcionando uma experiência inicial mais elegante e mágica.
+
 ## [4.2.0] - 2025-12-22
 
 ### Adicionado

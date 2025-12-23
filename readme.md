@@ -119,6 +119,8 @@ O app pode ser instalado como aplicativo no celular ou computador.
 
 ## 🎨 Recursos Visuais
 
+- **Legenda Dinâmica**: Citações literárias aleatórias que mudam a cada acesso
+- **Splash Screen Animada**: Tela de abertura com fundo de livros e animações suaves
 - **Design Responsivo**: Funciona em celular, tablet e desktop
 - **Tema Moderno**: Gradientes roxo e rosa
 - **Modularizado**: Código dividido em HTML, CSS e JS para melhor performance e manutenção
@@ -129,6 +131,6 @@ Este projeto foi criado especialmente para a minha linda esposa Ana Alice! ❤�
 
 ---
 
-**Versão**: 4.2.0  
-**Última atualização**: 22 de Dezembro de 2025  
+**Versão**: 4.3.0  
+**Última atualização**: 23 de Dezembro de 2025  
 **Desenvolvido com**: HTML, CSS, JavaScript, TailwindCSS, Google Apps Script, Groq API

@@ -1,5 +1,21 @@
 const API_URL = 'https://script.google.com/macros/s/AKfycbzYO5iizLJ-i-NKetEqIHTpphjBY4zo-NV4F5DOmbJL8MGbRm2G_O95G1Wk8UUNj2sP/exec';
 
+const bookQuotes = [
+    { quote: "Só se vê bem com o coração. O essencial é invisível aos olhos.", book: "O Pequeno Príncipe" },
+    { quote: "Aonde você quer ir? Depende de onde você quer chegar.", book: "Alice no País das Maravilhas" },
+    { quote: "Não é o que você tem, mas como você usa o que tem que faz a diferença.", book: "O Ursinho Pooh" },
+    { quote: "Você é mais corajoso do que acredita, mais forte do que parece e mais inteligente do que pensa.", book: "O Ursinho Pooh" },
+    { quote: "Mesmo as menores pessoas podem mudar o curso do futuro.", book: "O Senhor dos Anéis" },
+    { quote: "Existem muitos tipos de coragem. É preciso muita coragem para enfrentar nossos inimigos, mas igual coragem para enfrentar nossos amigos.", book: "Harry Potter e a Pedra Filosofal" },
+    { quote: "As palavras são, na minha nada humilde opinião, nossa fonte mais inesgotável de magia.", book: "Harry Potter e as Relíquias da Morte" },
+    { quote: "O mundo é, de fato, cheio de perigos, e nele há muitos lugares sombrios; mas ainda assim há muita coisa que é justa.", book: "O Senhor dos Anéis" },
+    { quote: "A felicidade pode ser encontrada mesmo nas horas mais difíceis, se você se lembrar de acender a luz.", book: "Harry Potter e o Prisioneiro de Azkaban" },
+    { quote: "Tudo o que temos de decidir é o que fazer com o tempo que nos é dado.", book: "O Senhor dos Anéis" }
+];
+
+const currentQuote = bookQuotes[Math.floor(Math.random() * bookQuotes.length)];
+let isSplashActive = true;
+
 let currentUser = null;
 let isLoginMode = true;
 let items = [];
@@ -830,7 +846,8 @@ function renderLogin() {
                 <div class="text-center mb-8">
                     <div class="text-6xl mb-4">📚</div>
                     <h1 class="text-3xl font-bold text-gray-800 mb-2">Mundo da Alice</h1>
-                    <p class="text-gray-600">App da princesa Ana Alice! ❤️</p>
+                    <p class="text-gray-600 italic">"${currentQuote.quote}"</p>
+                    <p class="text-xs text-gray-400 mt-1">— ${currentQuote.book}</p>
                 </div>
 
                 <div class="mb-6">
@@ -914,8 +931,9 @@ function render() {
         <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 shadow-lg">
             <div class="max-w-6xl mx-auto flex justify-between items-center flex-wrap gap-4">
                 <div>
-                    <h1 class="text-3xl font-bold mb-2">Mundo da Alice</h1>
-                    <p class="text-purple-100">App da princesa Ana Alice! ❤️</p>
+                    <h1 class="text-3xl font-bold mb-1">Mundo da Alice</h1>
+                    <p class="text-purple-100 text-sm italic">"${currentQuote.quote}"</p>
+                    <p class="text-[10px] text-purple-200">— ${currentQuote.book}</p>
                     ${loading ? '<p class="text-purple-200 mt-2 flex items-center gap-2"><span class="loading"></span> Carregando...</p>' : ''}
                 </div>
                 <div class="text-right">
@@ -1333,6 +1351,25 @@ function render() {
 
         ${renderChat()}
         ${renderInsight()}
+
+        ${isSplashActive ? `
+        <div id="splashScreen" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black overflow-hidden">
+            <div class="absolute inset-0 bg-cover bg-center opacity-60 splash-bg"></div>
+            <div class="absolute inset-0 bg-gradient-to-b from-transparent to-black/80"></div>
+            <div class="relative text-center px-4 animate-fade-in">
+                <div class="text-7xl mb-6 drop-shadow-2xl animate-bounce">📚</div>
+                <h1 class="text-5xl md:text-7xl font-extrabold text-white tracking-tighter drop-shadow-2xl">
+                    <span class="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400">
+                        Mundo da Alice
+                    </span>
+                </h1>
+                <div class="mt-8 flex justify-center">
+                    <div class="h-1 w-24 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-pulse"></div>
+                </div>
+                <p class="text-white/60 mt-4 text-sm uppercase tracking-widest font-medium">Carregando Magia...</p>
+            </div>
+        </div>
+        ` : ''}
     `;
 
     const input = document.getElementById('searchInput');
@@ -1355,6 +1392,20 @@ function render() {
             }
         }, 100);
     }
+}
+
+// Splash Screen Logic
+if (isSplashActive) {
+    setTimeout(() => {
+        const splash = document.getElementById('splashScreen');
+        if (splash) {
+            splash.classList.add('fade-out');
+            setTimeout(() => {
+                isSplashActive = false;
+                render();
+            }, 800);
+        }
+    }, 2500);
 }
 
 checkSavedLogin();
