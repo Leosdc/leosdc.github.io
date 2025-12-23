@@ -1416,8 +1416,8 @@ function handleRecap() {
 function getRecapData() {
     const yearItems = items.filter(i => {
         if (!i.date) return false;
-        const d = new Date(i.date);
-        return d.getFullYear() === parseInt(recapYear);
+        const d = toValidDate(i.date);
+        return d && d.getFullYear() === parseInt(recapYear);
     });
 
     const completedItems = yearItems.filter(i => i.status === 'Lido' || i.status === 'Assistido');
@@ -1454,7 +1454,10 @@ function renderRecapModal() {
 
     const data = getRecapData();
     const currentYear = new Date().getFullYear();
-    const availableYears = [...new Set(items.filter(i => i.date).map(i => new Date(i.date).getFullYear()))].sort((a, b) => b - a);
+    const availableYears = [...new Set(items.filter(i => i.date).map(i => {
+        const d = toValidDate(i.date);
+        return d ? d.getFullYear() : null;
+    }).filter(y => y))].sort((a, b) => b - a);
     if (!availableYears.includes(currentYear)) availableYears.unshift(currentYear);
 
     return `

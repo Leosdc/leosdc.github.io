@@ -8,8 +8,10 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 - **Recap Anual**: O modal de Recap agora permite filtrar as estatísticas por ano. Foi adicionado um seletor de anos dinâmico que detecta todos os anos presentes na sua biblioteca.
 - **Gráficos e Estatísticas Melhores**: O Recap agora exibe o número exato de itens acima das barras de categoria e as barras possuem um design mais robusto com sombras e cores vibrantes.
 
-### Alterado
 - **Interface**: O botão de fechar do Recap foi renomeado de "Continuar Lendo" para apenas "Continuar", tornando a navegação mais direta.
+
+### Corrigido
+- **Cálculos do Recap**: Corrigida falha no processamento de estatísticas anuais. O sistema agora interpreta corretamente datas no formato `DD/MM/AAAA`, garantindo que o resumo anual exiba os números reais da planilha.
 
 ## [4.4.0] - 2025-12-23
 
