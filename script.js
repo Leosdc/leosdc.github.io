@@ -59,6 +59,8 @@ let formData = {
 
 const statusOptions = ['Quero ler/assistir', 'Lido', 'Assistido', 'Desisti'];
 const ratingOptions = ['Maravilhoso 😍', 'Muito bom 😊', 'Bom 🙂', 'Mais ou menos 🤨', 'Ruim 🙁', 'Péssimo 😒'];
+let showRecapModal = false;
+
 const categoryOptions = ['Livro', 'Série', 'Filme'];
 const countryOptions = ['Brasil', 'Coreia do Sul', 'China', 'Japão', 'Taiwan', 'Tailândia', 'Estados Unidos', 'Outro'];
 
@@ -913,6 +915,7 @@ function renderLogin() {
     `;
 }
 
+
 function render() {
     if (!currentUser) {
         renderLogin();
@@ -929,21 +932,29 @@ function render() {
     document.getElementById('app').innerHTML = `
         <!-- Header -->
         <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 shadow-lg">
-            <div class="max-w-6xl mx-auto flex justify-between items-center flex-wrap gap-4">
-                <div>
+            <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center text-center md:text-left gap-4">
+                <div class="flex-1">
                     <h1 class="text-3xl font-bold mb-1">Mundo da Alice</h1>
                     <p class="text-purple-100 text-sm italic">"${currentQuote.quote}"</p>
                     <p class="text-[10px] text-purple-200">— ${currentQuote.book}</p>
-                    ${loading ? '<p class="text-purple-200 mt-2 flex items-center gap-2"><span class="loading"></span> Carregando...</p>' : ''}
+                    ${loading ? '<p class="text-purple-200 mt-2 flex items-center justify-center md:justify-start gap-2"><span class="loading"></span> Carregando...</p>' : ''}
                 </div>
-                <div class="text-right">
-                    <p class="text-purple-100 text-sm mb-2">👤 ${currentUser.username}</p>
-                    <button
-                        onclick="handleLogout();"
-                        class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                    >
-                        Sair
-                    </button>
+                <div class="flex flex-col items-center md:items-end gap-2">
+                    <p class="text-purple-100 text-sm">👤 ${currentUser.username}</p>
+                    <div class="flex gap-2">
+                        <button
+                            onclick="handleRecap();"
+                            class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
+                        >
+                            ✨ Recap
+                        </button>
+                        <button
+                            onclick="handleLogout();"
+                            class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        >
+                            Sair
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1351,6 +1362,7 @@ function render() {
 
         ${renderChat()}
         ${renderInsight()}
+        ${renderRecapModal()}
 
         ${isSplashActive ? `
         <div id="splashScreen" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black overflow-hidden">
@@ -1392,6 +1404,120 @@ function render() {
             }
         }, 100);
     }
+}
+
+function handleRecap() {
+    showRecapModal = true;
+    render();
+}
+
+function getRecapData() {
+    const completedItems = items.filter(i => i.status === 'Lido' || i.status === 'Assistido');
+
+    // Most used rating
+    const ratings = completedItems.map(i => i.rating).filter(r => r);
+    const ratingCounts = {};
+    ratings.forEach(r => ratingCounts[r] = (ratingCounts[r] || 0) + 1);
+    const mostUsedRating = Object.entries(ratingCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Nenhuma ainda';
+
+    // Totals
+    const stats = getStats();
+
+    // Favorite Category
+    const categoryCounts = {};
+    completedItems.forEach(i => categoryCounts[i.category] = (categoryCounts[i.category] || 0) + 1);
+    const favoriteCategory = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Nenhuma ainda';
+
+    return {
+        ...stats,
+        mostUsedRating,
+        favoriteCategory,
+        completedItemsCount: completedItems.length
+    };
+}
+
+function renderRecapModal() {
+    if (!showRecapModal) return '';
+
+    const data = getRecapData();
+
+    return `
+        <div class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden relative max-h-[90vh] flex flex-col">
+                <div class="bg-gradient-to-br from-purple-600 to-pink-600 p-8 text-white relative">
+                    <button 
+                        onclick="showRecapModal = false; render();"
+                        class="absolute top-4 right-4 text-white/80 hover:text-white text-2xl"
+                    >✕</button>
+                    <div class="text-center">
+                        <div class="text-5xl mb-4">✨</div>
+                        <h2 class="text-3xl font-bold">Seu Recap</h2>
+                        <p class="text-purple-100 opacity-90 mt-2">Um resumo da sua jornada no Mundo da Alice</p>
+                    </div>
+                </div>
+                
+                <div class="p-6 md:p-8 overflow-y-auto space-y-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-purple-50 p-4 rounded-2xl text-center">
+                            <div class="text-3xl mb-1">📚</div>
+                            <div class="text-2xl font-bold text-purple-700">${data.total}</div>
+                            <div class="text-xs text-purple-600 uppercase font-bold tracking-wider">Registros</div>
+                        </div>
+                        <div class="bg-pink-50 p-4 rounded-2xl text-center">
+                            <div class="text-3xl mb-1">✅</div>
+                            <div class="text-2xl font-bold text-pink-700">${data.completedItemsCount}</div>
+                            <div class="text-xs text-pink-600 uppercase font-bold tracking-wider">Concluídos</div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl">
+                            <div class="text-3xl">⭐</div>
+                            <div>
+                                <div class="text-sm text-gray-500">Avaliação mais usada</div>
+                                <div class="text-lg font-bold text-gray-800">${data.mostUsedRating}</div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl">
+                            <div class="text-3xl">❤️</div>
+                            <div>
+                                <div class="text-sm text-gray-500">Categoria Favorita</div>
+                                <div class="text-lg font-bold text-gray-800">${data.favoriteCategory}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-4">
+                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4 text-center">Por Categoria</h3>
+                        <div class="flex justify-around items-end h-32 px-4 text-center">
+                            <div class="flex flex-col items-center gap-2 w-full">
+                                <div class="w-full max-w-[40px] bg-blue-500 rounded-t-lg transition-all duration-1000" style="height: ${(data.books / data.total || 0) * 100}%"></div>
+                                <div class="text-xs font-bold text-gray-600">Livros</div>
+                            </div>
+                            <div class="flex flex-col items-center gap-2 w-full">
+                                <div class="w-full max-w-[40px] bg-pink-500 rounded-t-lg transition-all duration-1000" style="height: ${(data.series / data.total || 0) * 100}%"></div>
+                                <div class="text-xs font-bold text-gray-600">Séries</div>
+                            </div>
+                            <div class="flex flex-col items-center gap-2 w-full">
+                                <div class="w-full max-w-[40px] bg-yellow-500 rounded-t-lg transition-all duration-1000" style="height: ${(data.movies / data.total || 0) * 100}%"></div>
+                                <div class="text-xs font-bold text-gray-600">Filmes</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 bg-gray-50 border-t flex justify-center">
+                    <button 
+                        onclick="showRecapModal = false; render();"
+                        class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
+                    >
+                        Continuar Lendo
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 // Splash Screen Logic

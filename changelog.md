@@ -2,11 +2,18 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
-## [4.3.0] - 2025-12-23
+## [4.4.0] - 2025-12-23
 
 ### Adicionado
-- **Legenda Dinâmica**: O app agora exibe uma citação literária aleatória toda vez que é carregado, com frases de clássicos como *O Pequeno Príncipe*, *Harry Potter* e *Alice no País das Maravilhas*.
-- **Tela de Abertura (Splash Screen)**: Nova tela de carregamento animada com fundo artístico de estante de livros, proporcionando uma experiência inicial mais elegante e mágica.
+- **Recap "Seu Resumo"**: Novo modal de estatísticas pessoais ("Recap") que exibe o total de registros, itens concluídos, avaliação mais usada, categoria favorita e um gráfico visual de distribuição por categoria. Um resumo premium da jornada literária/cinematográfica do usuário.
+
+### Melhorado
+- **Layout Mobile**: Interface do cabeçalho totalmente otimizada para dispositivos móveis. O título, a citação dinâmica e as informações do usuário agora são centralizados em telas pequenas, proporcionando uma navegação mais intuitiva e limpa.
+
+### Corrigido
+- **Estabilidade do Render**: Corrigidos erros de sintaxe críticos no template literal da função de renderização que impediam o carregamento da página em certas condições.
+
+## [4.3.0] - 2025-12-23
 
 ## [4.2.0] - 2025-12-22
 

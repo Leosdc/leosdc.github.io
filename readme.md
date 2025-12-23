@@ -32,6 +32,7 @@ App que fiz para minha esposa organizar e gerenciar livros, séries e filmes!
 
 ### 📊 Estatísticas e Gráficos
 - **Dashboard**: Visualização rápida de totais por categoria e concluídos
+- **Recap "Seu Resumo"**: Modal premium com estatísticas detalhadas (Total, Concluídos, Favoritos) e gráficos de distribuição
 - **Gráficos Interativos**:
   - Visualização diária, mensal ou anual
   - Filtro por tipo (todos, livros, séries ou filmes)
@@ -120,8 +121,10 @@ O app pode ser instalado como aplicativo no celular ou computador.
 ## 🎨 Recursos Visuais
 
 - **Legenda Dinâmica**: Citações literárias aleatórias que mudam a cada acesso
+- **Recap de Conclusão**: Resumo visual premium das suas conquistas
 - **Splash Screen Animada**: Tela de abertura com fundo de livros e animações suaves
-- **Design Responsivo**: Funciona em celular, tablet e desktop
+- **Otimização Mobile**: Cabeçalho e interface centralizados para melhor uso no celular
+- **Design Responsivo**: Funciona perfeitamente em qualquer dispositivo
 - **Tema Moderno**: Gradientes roxo e rosa
 - **Modularizado**: Código dividido em HTML, CSS e JS para melhor performance e manutenção
 
@@ -131,6 +134,6 @@ Este projeto foi criado especialmente para a minha linda esposa Ana Alice! ❤�
 
 ---
 
-**Versão**: 4.3.0  
+**Versão**: 4.4.0  
 **Última atualização**: 23 de Dezembro de 2025  
 **Desenvolvido com**: HTML, CSS, JavaScript, TailwindCSS, Google Apps Script, Groq API
