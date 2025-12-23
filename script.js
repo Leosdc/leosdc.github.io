@@ -848,7 +848,7 @@ function renderLogin() {
             <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
                 <div class="text-center mb-8">
                     <div class="mb-4">
-                        <img src="icon.png" alt="Mundo da Alice" class="w-24 h-24 mx-auto">
+                        <img src="icon.png" alt="Mundo da Alice" class="w-32 h-32 mx-auto">
                     </div>
                     <h1 class="text-3xl font-bold text-gray-800 mb-2 app-title">Mundo da Alice</h1>
                     <p class="text-gray-600 italic">"${currentQuote.quote}"</p>
