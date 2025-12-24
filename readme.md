@@ -44,7 +44,7 @@ App que fiz para minha esposa organizar e gerenciar livros, séries e filmes!
 - **Backup Automático**: Seus dados sempre seguros na nuvem
 
 ### 🤖 Inteligência Artificial (Groq)
-- **Assistente de Chat**: Registre livros, filmes ou séries conversando com o bot
+- **Alice - Assistente Inteligente**: Registre livros, filmes ou séries conversando com a Alice, inspirada no País das Maravilhas
 - **Sistema de Sugestões**: Botão "Sugerir algo 🪄" que analisa seu histórico para recomendar novas obras
 - **IA Curiosa**: Receba fatos e curiosidades sobre os itens da sua biblioteca
 - **Segurança de API**: Chave do Groq escondida com segurança no Google Apps Script
@@ -134,6 +134,6 @@ Este projeto foi criado especialmente para a minha linda esposa Ana Alice! ❤�
 
 ---
 
-**Versão**: 4.6.0  
+**Versão**: 4.7.0  
 **Última atualização**: 23 de Dezembro de 2025  
 **Desenvolvido com**: HTML, CSS, JavaScript, TailwindCSS, Google Apps Script, Groq API

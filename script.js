@@ -40,7 +40,7 @@ let loginData = {
 };
 let chatOpen = false;
 let chatMessages = [
-    { role: 'assistant', content: 'Olá! Sou o assistente da Alice. Posso te ajudar a registrar um livro, série ou filme. O que vamos registrar hoje?' }
+    { role: 'assistant', content: 'Olá! Sou a Alice. Posso te ajudar a registrar um livro, série ou filme. O que vamos registrar hoje?' }
 ];
 let isChatLoading = false;
 let showInsight = false;
@@ -172,7 +172,7 @@ function handleLogout() {
     loginData = { username: '', password: '' };
     chatOpen = false;
     chatMessages = [
-        { role: 'assistant', content: 'Olá! Sou o assistente da Alice. Posso te ajudar a registrar um livro, série ou filme. O que vamos registrar hoje?' }
+        { role: 'assistant', content: 'Olá! Sou a Alice. Posso te ajudar a registrar um livro, série ou filme. O que vamos registrar hoje?' }
     ];
     showNotification('Você saiu da conta!');
     renderLogin();
@@ -224,7 +224,7 @@ async function handleChatSubmit() {
     // Contexto para o bot: Ele deve agir como um assistente de registro.
     const systemMessage = {
         role: 'system',
-        content: `Você é o assistente do app "Mundo da Alice". Seu objetivo é ajudar o usuário a registrar Livros, Séries ou Filmes.
+        content: `Você é a Alice do app "Mundo da Alice". Seu objetivo é ajudar o usuário a registrar Livros, Séries ou Filmes.
         CAMPOS NECESSÁRIOS: Título, Autor (se for livro), Páginas/Episódios (número), Status (Quero ler/assistir, Lido, Assistido, Desisti), Avaliação, Data (em formato DD/MM/AAAA), Categoria (Livro, Série, Filme), País (Opcional).
         
         REGRAS:
@@ -373,7 +373,7 @@ function renderChat() {
             <button
                 onclick="chatOpen = true; render();"
                 class="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl hover:scale-110 transition-transform z-50"
-                title="Conversar com o assistente"
+                title="Conversar com a Alice"
             >
                 💬
             </button>
@@ -385,9 +385,9 @@ function renderChat() {
             <!-- Header -->
             <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-4 text-white flex justify-between items-center">
                 <div class="flex items-center gap-2">
-                    <span class="text-xl">🤖</span>
+                    <img src="alice_face_icon.png" alt="Alice" class="w-8 h-8 rounded-full object-cover" />
                     <div>
-                        <h3 class="font-bold text-sm">Assistente da Alice</h3>
+                        <h3 class="font-bold text-sm">Alice</h3>
                         <p class="text-[10px] text-purple-100">Pronto para ajudar! ✨</p>
                     </div>
                 </div>

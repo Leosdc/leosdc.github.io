@@ -2,6 +2,17 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
+## [4.7.0] - 2025-12-23
+
+### Alterado
+- **Assistente Personalizado**: O assistente agora se apresenta como "Alice" (do País das Maravilhas) em vez de "Assistente da Alice"
+- **Ícone da Alice**: Criado e implementado ícone estilizado do rosto da Alice, substituindo o emoji de robô 🤖
+- **Identidade do Chat**: Todas as mensagens e referências ao assistente foram atualizadas para refletir a nova identidade como "Alice"
+
+### Corrigido
+- **Carregamento do App**: Corrigido erro crítico onde o app abria o arquivo README ao invés da aplicação. O arquivo principal foi renomeado para `index.html`.
+- **Ícone do Aplicativo**: O ícone de instalação (PWA) agora usa corretamente a imagem da Alice de cabelo preto, substituindo o ícone antigo de livros.
+
 ## [4.6.0] - 2025-12-23
 
 ### Adicionado
