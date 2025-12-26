@@ -2,6 +2,11 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
+## [4.8.0] - 2025-12-26
+
+### Alterado
+- **Sugestões com Autor**: O sistema de sugestões agora inclui explicitamente o nome do autor quando recomenda um livro, melhorando a precisão e utilidade das recomendações.
+
 ## [4.7.0] - 2025-12-23
 
 ### Alterado

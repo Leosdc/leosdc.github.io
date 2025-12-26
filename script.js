@@ -319,7 +319,7 @@ async function handleSuggestionRequest() {
         2. Explique brevemente (sinopse) por que você acha que ele vai gostar.
         3. Seja entusiasmado e use emojis.
         4. NÃO sugira algo que já está no histórico.
-        5. Formate a resposta como: "Minha sugestão: **[NOME]**\n\n**Sinopse:** [SINOPSE CURTA]\n\n**Por que você vai amar:** [MOTIVO]"`
+        5. Formate a resposta como: "Minha sugestão: **[NOME]**" (se for Livro, adicione " **por [AUTOR]**")\n\n**Sinopse:** [SINOPSE CURTA]\n\n**Por que você vai amar:** [MOTIVO]"`
     };
 
     const response = await callGroqViaGAS([suggestionPrompt]);
