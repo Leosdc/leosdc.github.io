@@ -65,12 +65,12 @@ Na primeira linha, adicione os seguintes cabeçalhos:
 Usuario | Senha
 ```
 
-#### c) Configurar a Aba "Biblioteca"
-Na primeira linha, adicione os seguintes cabeçalhos:
+#### c) Configurar Abas de Usuário
+As abas dos usuários são criadas automaticamente. Elas seguem este padrão de cabeçalho:
 ```
-Usuario | Título | Autor | Nº Páginas | Episódios | Status | Avaliação | Data | Categoria | País
+Usuário | Título | Autor | Páginas/Episódios | Status | Avaliação | Data | Categoria | País
 ```
-*(Nota: O campo "Tempo médio" foi removido na versão 3.0)*
+*(Nota: O campo "Tempo médio" foi removido na versão 5.0)*
 
 ### 2. Configuração do Google Apps Script
 
@@ -96,9 +96,9 @@ Usuario | Título | Autor | Nº Páginas | Episódios | Status | Avaliação | D
 ### 3. Configuração do Arquivo HTML
 
 A partir da versão 3.0, o projeto é modular.
-1. Abra o arquivo `script.js`
-2. Localize a linha da `API_URL` no topo
-3. Substitua pela sua URL do Apps Script
+1. Abra o arquivo `env.js` (ou crie um se não existir)
+2. Defina a `API_URL` com a URL do seu Apps Script
+3. Certifique-se de que o `env.js` está listado no `.gitignore`
 
 ### 4. Usar o Aplicativo
 
@@ -134,6 +134,6 @@ Este projeto foi criado especialmente para a minha linda esposa Ana Alice! ❤�
 
 ---
 
-**Versão**: 4.7.0  
-**Última atualização**: 23 de Dezembro de 2025  
+**Versão**: 5.0.0  
+**Última atualização**: 28 de Dezembro de 2025  
 **Desenvolvido com**: HTML, CSS, JavaScript, TailwindCSS, Google Apps Script, Groq API

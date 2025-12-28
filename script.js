@@ -1,4 +1,4 @@
-const API_URL = 'https://script.google.com/macros/s/AKfycbzYO5iizLJ-i-NKetEqIHTpphjBY4zo-NV4F5DOmbJL8MGbRm2G_O95G1Wk8UUNj2sP/exec';
+const API_URL = window.ENV ? window.ENV.API_URL : '';
 
 const bookQuotes = [
     { quote: "Só se vê bem com o coração. O essencial é invisível aos olhos.", book: "O Pequeno Príncipe" },
@@ -689,8 +689,7 @@ function resetForm() {
         rating: '',
         date: '',
         category: 'Livro',
-        country: '',
-        avgTime: ''
+        country: ''
     };
     showForm = false;
     editingId = null;

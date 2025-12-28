@@ -2,6 +2,21 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
+## [5.0.0] - 2025-12-28
+
+### Adicionado
+- **Partitionamento por Usuário**: Os dados de cada usuário agora são isolados em suas próprias abas (ex: `anaalice`, `juliana`), garantindo total privacidade e performance.
+- **Auto-Provisionamento**: Novas abas de usuários são criadas automaticamente no primeiro registro ou cadastro.
+- **Utilitário de Limpeza**: Nova função `removerColunaTempoMedio` para automatizar a manutenção da planilha.
+- **Segurança de API**: A URL do App Script foi movida para variáveis de ambiente (`.env` e `env.js`) protegidas por gitignore.
+
+### Alterado
+- **Arquitetura de Dados**: Transição de uma tabela única ("Biblioteca") para abas individuais nomeadas por nome de usuário.
+- **Contexto da IA**: A Alice agora utiliza o histórico exclusivo da aba do usuário logado para sugestões e insights.
+
+### Removido
+- **Coluna Tempo Médio**: Removido completamente do banco de dados e da interface para simplificar o preenchimento.
+
 ## [4.8.0] - 2025-12-26
 
 ### Alterado
