@@ -2,7 +2,14 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
-## [5.0.0] - 2025-12-28
+## [5.1.0] - 2025-12-28
+### Alterado
+- **Modelo de Segurança**: Migração para um sistema de validação de credenciais diretamente no backend (App Script).
+- **GitHub Pages**: A `API_URL` voltou a ser pública no `script.js` para garantir compatibilidade com o deploy estático.
+- **Simplificação**: Removida a dependência do arquivo `env.js`, unificando a configuração.
+- **Resiliência**: Todas as chamadas ao backend agora enviam credenciais criptografadas (via HTTPS) para validação obrigatória.
+
+## [5.0.0] - 2025-12-27
 
 ### Adicionado
 - **Partitionamento por Usuário**: Os dados de cada usuário agora são isolados em suas próprias abas (ex: `anaalice`, `juliana`), garantindo total privacidade e performance.

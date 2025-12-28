@@ -1,9 +1,4 @@
-const getApiUrl = () => {
-    if (window.ENV && window.ENV.API_URL) return window.ENV.API_URL;
-    // Fallback para quando o script.js carrega antes do env.js (apesar da ordem no HTML)
-    return '';
-};
-const API_URL = getApiUrl() || (window.ENV ? window.ENV.API_URL : '');
+const API_URL = 'https://script.google.com/macros/s/AKfycbzYO5iizLJ-i-NKetEqIHTpphjBY4zo-NV4F5DOmbJL8MGbRm2G_O95G1Wk8UUNj2sP/exec';
 
 const bookQuotes = [
     { quote: "Só se vê bem com o coração. O essencial é invisível aos olhos.", book: "O Pequeno Príncipe" },
@@ -103,18 +98,9 @@ async function handleLogin() {
     loading = true;
     renderLogin();
 
-    const finalUrl = getApiUrl();
-    if (!finalUrl) {
-        console.error('API_URL não encontrada! Verifique se o arquivo env.js existe e está correto.');
-        showNotification('Erro de configuração: API_URL não encontrada.', 'error');
-        loading = false;
-        renderLogin();
-        return;
-    }
-
     try {
-        const url = `${finalUrl}?action=checkUser&username=${encodeURIComponent(loginData.username)}&password=${encodeURIComponent(loginData.password)}`;
-        console.log('Tentando login em:', finalUrl);
+        const url = `${API_URL}?action=checkUser&username=${encodeURIComponent(loginData.username)}&password=${encodeURIComponent(loginData.password)}`;
+        console.log('Tentando login em:', API_URL);
 
         const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -569,8 +555,11 @@ async function loadData() {
 
     loading = true;
     render();
+
+    const password = localStorage.getItem('mundoAlicePass');
     try {
-        const response = await fetch(`${API_URL}?username=${encodeURIComponent(currentUser.username)}`);
+        const url = `${API_URL}?username=${encodeURIComponent(currentUser.username)}&password=${encodeURIComponent(password)}`;
+        const response = await fetch(url);
         const data = await response.json();
         items = data.map((item, index) => ({
             id: index,
@@ -597,6 +586,8 @@ async function loadData() {
 async function saveToSheet(action, data) {
     loading = true;
     render();
+
+    const password = localStorage.getItem('mundoAlicePass');
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
@@ -605,8 +596,9 @@ async function saveToSheet(action, data) {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                action: action,
+                action,
                 username: currentUser.username,
+                password: password,
                 ...data
             })
         });
