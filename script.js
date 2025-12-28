@@ -1,4 +1,9 @@
-const API_URL = window.ENV ? window.ENV.API_URL : '';
+const getApiUrl = () => {
+    if (window.ENV && window.ENV.API_URL) return window.ENV.API_URL;
+    // Fallback para quando o script.js carrega antes do env.js (apesar da ordem no HTML)
+    return '';
+};
+const API_URL = getApiUrl() || (window.ENV ? window.ENV.API_URL : '');
 
 const bookQuotes = [
     { quote: "Só se vê bem com o coração. O essencial é invisível aos olhos.", book: "O Pequeno Príncipe" },
@@ -98,8 +103,22 @@ async function handleLogin() {
     loading = true;
     renderLogin();
 
+    const finalUrl = getApiUrl();
+    if (!finalUrl) {
+        console.error('API_URL não encontrada! Verifique se o arquivo env.js existe e está correto.');
+        showNotification('Erro de configuração: API_URL não encontrada.', 'error');
+        loading = false;
+        renderLogin();
+        return;
+    }
+
     try {
-        const response = await fetch(`${API_URL}?action=checkUser&username=${encodeURIComponent(loginData.username)}&password=${encodeURIComponent(loginData.password)}`);
+        const url = `${finalUrl}?action=checkUser&username=${encodeURIComponent(loginData.username)}&password=${encodeURIComponent(loginData.password)}`;
+        console.log('Tentando login em:', finalUrl);
+
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
         const result = await response.json();
 
         if (result.success) {
@@ -114,8 +133,8 @@ async function handleLogin() {
             renderLogin();
         }
     } catch (error) {
-        console.error('Erro no login:', error);
-        showNotification('Erro ao fazer login. Tente novamente.', 'error');
+        console.error('Erro detalhado no login:', error);
+        showNotification(`Erro ao fazer login: ${error.message || 'Tente novamente.'}`, 'error');
         loading = false;
         renderLogin();
     }
