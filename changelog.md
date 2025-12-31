@@ -2,6 +2,12 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
+## [5.2.0] - 2025-12-31
+### Adicionado
+- **Estatísticas Detalhadas no Recap**: O resumo anual agora mostra o total de páginas lidas para livros e total de episódios para séries.
+- **Design para Redes Sociais**: O modal de Recap foi redesenhado para ser mais compacto e "printável", facilitando o compartilhamento em redes sociais.
+- **Separação Visual**: Nova identidade visual por categorias dentro do Recap (Azul para Livros, Rosa para Séries, Amarelo para Filmes).
+
 ## [5.1.0] - 2025-12-28
 ### Alterado
 - **Modelo de Segurança**: Migração para um sistema de validação de credenciais diretamente no backend (App Script).

@@ -1446,12 +1446,27 @@ function getRecapData() {
     const favoriteCategory = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Nenhuma ainda';
 
     // Stats for the year
+    const books = yearItems.filter(i => i.category === 'Livro');
+    const series = yearItems.filter(i => i.category === 'Série' || i.category === 'Serie');
+    const movies = yearItems.filter(i => i.category === 'Filme');
+
+    const completedBooks = books.filter(i => i.status === 'Lido');
+    const completedSeries = series.filter(i => i.status === 'Assistido');
+
+    const totalPages = completedBooks.reduce((sum, i) => sum + (parseInt(i.pages) || 0), 0);
+    const totalEpisodes = completedSeries.reduce((sum, i) => sum + (parseInt(i.pages) || 0), 0);
+
     const yearStats = {
         total: yearItems.length,
-        books: yearItems.filter(i => i.category === 'Livro').length,
-        series: yearItems.filter(i => i.category === 'Série').length,
-        movies: yearItems.filter(i => i.category === 'Filme').length,
-        completedItemsCount: completedItems.length
+        booksCount: books.length,
+        seriesCount: series.length,
+        moviesCount: movies.length,
+        completedBooksCount: completedBooks.length,
+        completedSeriesCount: completedSeries.length,
+        completedMoviesCount: movies.filter(i => i.status === 'Assistido').length,
+        completedItemsCount: completedItems.length,
+        totalPages,
+        totalEpisodes
     };
 
     return {
@@ -1473,22 +1488,21 @@ function renderRecapModal() {
     if (!availableYears.includes(currentYear)) availableYears.unshift(currentYear);
 
     return `
-        <div class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden relative max-h-[90vh] flex flex-col">
-                <div class="bg-gradient-to-br from-purple-600 to-pink-600 p-8 text-white relative">
+        <div class="fixed inset-0 z-[10000] flex items-center justify-center p-2 bg-black/60 backdrop-blur-sm animate-fade-in">
+            <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm overflow-hidden relative max-h-[95vh] flex flex-col">
+                <div class="bg-gradient-to-br from-purple-600 to-pink-600 p-6 text-white relative">
                     <button 
                         onclick="showRecapModal = false; render();"
-                        class="absolute top-4 right-4 text-white/80 hover:text-white text-2xl"
+                        class="absolute top-4 right-4 text-white/80 hover:text-white text-xl"
                     >✕</button>
                     <div class="text-center">
-                        <div class="text-5xl mb-4">✨</div>
-                        <h2 class="text-3xl font-bold">Resumo ${recapYear}</h2>
+                        <div class="text-4xl mb-2">✨</div>
+                        <h2 class="text-2xl font-bold">Resumo ${recapYear}</h2>
                         
-                        <!-- Ano Selector -->
-                        <div class="mt-4 inline-flex items-center gap-2 bg-white/20 p-1 rounded-xl backdrop-blur-md">
+                        <div class="mt-2 inline-flex items-center gap-2 bg-white/20 p-1 rounded-lg backdrop-blur-md">
                             <select 
                                 onchange="recapYear = parseInt(this.value); render();"
-                                class="bg-transparent text-white font-bold outline-none cursor-pointer px-3 py-1"
+                                class="bg-transparent text-white text-sm font-bold outline-none cursor-pointer px-2"
                             >
                                 ${availableYears.map(y => `<option value="${y}" ${y == recapYear ? 'selected' : ''} class="text-gray-800">${y}</option>`).join('')}
                             </select>
@@ -1496,73 +1510,105 @@ function renderRecapModal() {
                     </div>
                 </div>
                 
-                <div class="p-6 md:p-8 overflow-y-auto space-y-6">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-purple-50 p-4 rounded-2xl text-center border border-purple-100">
-                            <div class="text-3xl mb-1">📚</div>
-                            <div class="text-2xl font-bold text-purple-700">${data.total}</div>
-                            <div class="text-xs text-purple-600 uppercase font-bold tracking-wider">Registros</div>
+                <div class="p-5 overflow-y-auto space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-purple-50 p-3 rounded-2xl text-center border border-purple-100">
+                            <div class="text-2xl mb-1">📚</div>
+                            <div class="text-xl font-bold text-purple-700">${data.total}</div>
+                            <div class="text-[10px] text-purple-600 uppercase font-bold tracking-wider">Registros</div>
                         </div>
-                        <div class="bg-pink-50 p-4 rounded-2xl text-center border border-pink-100">
-                            <div class="text-3xl mb-1">✅</div>
-                            <div class="text-2xl font-bold text-pink-700">${data.completedItemsCount}</div>
-                            <div class="text-xs text-pink-600 uppercase font-bold tracking-wider">Concluídos</div>
+                        <div class="bg-pink-50 p-3 rounded-2xl text-center border border-pink-100">
+                            <div class="text-2xl mb-1">✅</div>
+                            <div class="text-xl font-bold text-pink-700">${data.completedItemsCount}</div>
+                            <div class="text-[10px] text-pink-600 uppercase font-bold tracking-wider">Concluídos</div>
                         </div>
                     </div>
 
-                    <div class="space-y-4">
-                        <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                            <div class="text-3xl">⭐</div>
+                    <!-- Highlights Section -->
+                    <div class="space-y-3">
+                        ${data.completedBooksCount > 0 ? `
+                        <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-100">
+                            <div class="text-2xl">📖</div>
                             <div>
-                                <div class="text-sm text-gray-500">Avaliação mais usada</div>
-                                <div class="text-lg font-bold text-gray-800">${data.mostUsedRating}</div>
+                                <div class="text-xs text-blue-600 font-bold uppercase tracking-tight">Livros</div>
+                                <div class="text-sm font-medium text-gray-800">
+                                    <span class="font-bold text-blue-700">${data.completedBooksCount}</span> livros... 
+                                    <span class="font-bold text-blue-700">${data.totalPages}</span> páginas total
+                                </div>
                             </div>
                         </div>
+                        ` : ''}
 
-                        <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                            <div class="text-3xl">❤️</div>
+                        ${data.completedSeriesCount > 0 ? `
+                        <div class="flex items-center gap-3 p-3 bg-pink-50 rounded-xl border border-pink-100">
+                            <div class="text-2xl">📺</div>
                             <div>
-                                <div class="text-sm text-gray-500">Categoria Favorita</div>
-                                <div class="text-lg font-bold text-gray-800">${data.favoriteCategory}</div>
+                                <div class="text-xs text-pink-600 font-bold uppercase tracking-tight">Séries</div>
+                                <div class="text-sm font-medium text-gray-800">
+                                    <span class="font-bold text-pink-700">${data.completedSeriesCount}</span> séries... 
+                                    <span class="font-bold text-pink-700">${data.totalEpisodes}</span> episódios
+                                </div>
                             </div>
+                        </div>
+                        ` : ''}
+
+                         ${data.completedMoviesCount > 0 ? `
+                        <div class="flex items-center gap-3 p-3 bg-yellow-50 rounded-xl border border-yellow-100">
+                            <div class="text-2xl">🎬</div>
+                            <div>
+                                <div class="text-xs text-yellow-600 font-bold uppercase tracking-tight">Filmes</div>
+                                <div class="text-sm font-medium text-gray-800">
+                                    <span class="font-bold text-yellow-700">${data.completedMoviesCount}</span> filmes assistidos
+                                </div>
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                            <div class="text-xs text-gray-500 uppercase font-bold mb-1">Status Favorito</div>
+                            <div class="text-sm font-bold text-gray-800 truncate">${data.mostUsedRating}</div>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                            <div class="text-xs text-gray-500 uppercase font-bold mb-1">Mais visto/lido</div>
+                            <div class="text-sm font-bold text-gray-800 truncate">${data.favoriteCategory}</div>
                         </div>
                     </div>
 
                     ${data.total > 0 ? `
-                    <div class="pt-4">
-                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4 text-center">Por Categoria</h3>
-                        <div class="flex justify-around items-end h-32 px-4 text-center">
-                            <div class="flex flex-col items-center gap-2 w-full">
-                                <div class="w-full max-w-[40px] bg-blue-500 rounded-t-lg transition-all duration-1000 shadow-lg" style="height: ${(data.books / data.total) * 100}%"></div>
-                                <div class="text-[10px] font-bold text-gray-500 uppercase">${data.books}</div>
-                                <div class="text-xs font-bold text-gray-700">Livros</div>
+                    <div class="pt-2">
+                        <div class="flex justify-around items-end h-24 px-2 text-center">
+                            <div class="flex flex-col items-center gap-1 w-full">
+                                <div class="w-full max-w-[30px] bg-blue-500 rounded-t-lg transition-all duration-1000 shadow-md" style="height: ${(data.booksCount / data.total) * 100}%"></div>
+                                <div class="text-[9px] font-bold text-gray-400">${data.booksCount}</div>
+                                <div class="text-[10px] font-bold text-gray-700">Livros</div>
                             </div>
-                            <div class="flex flex-col items-center gap-2 w-full">
-                                <div class="w-full max-w-[40px] bg-pink-500 rounded-t-lg transition-all duration-1000 shadow-lg" style="height: ${(data.series / data.total) * 100}%"></div>
-                                <div class="text-[10px] font-bold text-gray-500 uppercase">${data.series}</div>
-                                <div class="text-xs font-bold text-gray-700">Séries</div>
+                            <div class="flex flex-col items-center gap-1 w-full">
+                                <div class="w-full max-w-[30px] bg-pink-500 rounded-t-lg transition-all duration-1000 shadow-md" style="height: ${(data.seriesCount / data.total) * 100}%"></div>
+                                <div class="text-[9px] font-bold text-gray-400">${data.seriesCount}</div>
+                                <div class="text-[10px] font-bold text-gray-700">Séries</div>
                             </div>
-                            <div class="flex flex-col items-center gap-2 w-full">
-                                <div class="w-full max-w-[40px] bg-yellow-500 rounded-t-lg transition-all duration-1000 shadow-lg" style="height: ${(data.movies / data.total) * 100}%"></div>
-                                <div class="text-[10px] font-bold text-gray-500 uppercase">${data.movies}</div>
-                                <div class="text-xs font-bold text-gray-700">Filmes</div>
+                            <div class="flex flex-col items-center gap-1 w-full">
+                                <div class="w-full max-w-[30px] bg-yellow-500 rounded-t-lg transition-all duration-1000 shadow-md" style="height: ${(data.moviesCount / data.total) * 100}%"></div>
+                                <div class="text-[9px] font-bold text-gray-400">${data.moviesCount}</div>
+                                <div class="text-[10px] font-bold text-gray-700">Filmes</div>
                             </div>
                         </div>
                     </div>
                     ` : `
-                    <div class="text-center py-8 text-gray-400">
-                        <div class="text-4xl mb-2">🏜️</div>
-                        <p>Nenhum registro encontrado em ${recapYear}</p>
+                    <div class="text-center py-4 text-gray-400">
+                        <p class="text-sm">Nenhum registro em ${recapYear}</p>
                     </div>
                     `}
                 </div>
 
-                <div class="p-6 bg-gray-50 border-t flex justify-center">
+                <div class="p-4 bg-gray-50 border-t flex justify-center">
                     <button 
                         onclick="showRecapModal = false; render();"
-                        class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
+                        class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-10 py-2.5 rounded-full font-bold shadow-lg text-sm"
                     >
-                        Continuar
+                        Fechar
                     </button>
                 </div>
             </div>

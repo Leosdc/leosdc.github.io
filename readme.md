@@ -32,7 +32,7 @@ App que fiz para minha esposa organizar e gerenciar livros, séries e filmes!
 
 ### 📊 Estatísticas e Gráficos
 - **Dashboard**: Visualização rápida de totais por categoria e concluídos
-- **Recap "Seu Resumo"**: Modal premium com estatísticas detalhadas (Total, Concluídos, Favoritos) e gráficos de distribuição
+- **Recap "Seu Resumo"**: Modal premium otimizado para screenshots com estatísticas detalhadas (Páginas de livros, Episódios de séries) e gráficos categorizados.
 - **Gráficos Interativos**:
   - Visualização diária, mensal ou anual
   - Filtro por tipo (todos, livros, séries ou filmes)
@@ -134,6 +134,6 @@ Este projeto foi criado especialmente para a minha linda esposa Ana Alice! ❤�
 
 ---
 
-**Versão**: 5.0.0  
-**Última atualização**: 28 de Dezembro de 2025  
+**Versão**: 5.2.0  
+**Última atualização**: 31 de Dezembro de 2025  
 **Desenvolvido com**: HTML, CSS, JavaScript, TailwindCSS, Google Apps Script, Groq API
