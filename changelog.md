@@ -5,7 +5,7 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 ## [5.3.0] - 2026-01-06
 ### Adicionado
 - **Nova interface**: Criada uma nova interface gráfica para o app, com transições mais suaves.
-- **estatísticas agora possui uma tela própria**: As estatísticas agora possuem uma tela própria, com gráficos e estatísticas detalhadas.
+- **Estatísticas**: As estatísticas agora possuem uma tela própria, com gráficos e estatísticas detalhadas.
 
 ### Bugs conhecidos
 - **Estatísticas mensais, anuais e semanal não estão funcionando corretamente**: As estatísticas não estão funcionando corretamente, pois não estão sendo atualizadas na interface.
