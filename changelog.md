@@ -2,6 +2,14 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
+## [5.3.0] - 2026-01-06
+### Adicionado
+- **Nova interface**: Criada uma nova interface gráfica para o app, com transições mais suaves.
+- **estatísticas agora possui uma tela própria**: As estatísticas agora possuem uma tela própria, com gráficos e estatísticas detalhadas.
+
+### Bugs conhecidos
+- **Estatísticas mensais, anuais e semanal não estão funcionando corretamente**: As estatísticas não estão funcionando corretamente, pois não estão sendo atualizadas na interface.
+
 ## [5.2.0] - 2025-12-31
 ### Adicionado
 - **Estatísticas Detalhadas no Recap**: O resumo anual agora mostra o total de páginas lidas para livros e total de episódios para séries.

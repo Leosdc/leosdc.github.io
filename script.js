@@ -15,6 +15,7 @@ const bookQuotes = [
 
 const currentQuote = bookQuotes[Math.floor(Math.random() * bookQuotes.length)];
 let isSplashActive = true;
+let currentView = 'dashboard'; // 'dashboard' or 'stats'
 
 let currentUser = null;
 let isLoginMode = true;
@@ -229,11 +230,15 @@ async function handleChatSubmit() {
     // Contexto para o bot: Ele deve agir como um assistente de registro.
     const systemMessage = {
         role: 'system',
-        content: `Você é a Alice do app "Mundo da Alice". Seu objetivo é ajudar o usuário a registrar Livros, Séries ou Filmes.
+        content: `Você é a Alice do app "Mundo da Alice". Seu objetivo é ajudar o usuário a registrar Livros, Séries ou Filmes de forma EXTREMAMENTE cuidadosa.
+        
+        PESQUISA E PRECISÃO:
+        Antes de sugerir ou confirmar dados, "pesquise" mentalmente para garantir que o autor, número de episódios ou páginas estejam corretos. Se não tiver certeza absoluta, peça para o usuário confirmar. Evite inventar dados (alucinações).
+        
         CAMPOS NECESSÁRIOS: Título, Autor (se for livro), Páginas/Episódios (número), Status (Quero ler/assistir, Lido, Assistido, Desisti), Avaliação, Data (em formato DD/MM/AAAA), Categoria (Livro, Série, Filme), País (Opcional).
         
         REGRAS:
-        1. Seja amigável e use emojis.
+        1. Seja amigável e use emojis, mas mantenha o foco na organização.
         2. Pergunte uma coisa de cada vez. IMPORTANTE: Pergunte a data de leitura/assistência e peça para o usuário digitar no formato DD/MM/AAAA.
         3. Quando tiver TODAS as informações, termine respondendo EXATAMENTE com um JSON no formato: 
         [[REGISTER_ITEM: {"title": "...", "author": "...", "pages": "...", "status": "...", "rating": "...", "date": "...", "category": "...", "country": "..."}]]
@@ -314,17 +319,20 @@ async function handleSuggestionRequest() {
 
     const suggestionPrompt = {
         role: 'system',
-        content: `Você é um curador especialista em entretenimento. Com base no histórico de leitura/visualização do usuário, sugira UM item (Livro, Filme ou Série) que ele provavelmente adoraria.
+        content: `Você é um curador especialista em entretenimento, conhecido por sua precisão e recomendações impecáveis.
+        
+        PESQUISA RIGOROSA: 
+        Analise o histórico do usuário com cuidado. Pense em conexões de gênero, autores, diretores e temática. SEMPRE verifique se sua sugestão existe de fato e se o autor está correto.
         
         HISTÓRICO RECENTE:
         ${history}
 
         REGRAS:
         1. Sugira apenas UM item.
-        2. Explique brevemente (sinopse) por que você acha que ele vai gostar.
-        3. Seja entusiasmado e use emojis.
-        4. NÃO sugira algo que já está no histórico.
-        5. Formate a resposta como: "Minha sugestão: **[NOME]**" (se for Livro, adicione " **por [AUTOR]**")\n\n**Sinopse:** [SINOPSE CURTA]\n\n**Por que você vai amar:** [MOTIVO]"`
+        2. Explique detalhadamente por que você acha que ele vai gostar, conectando com o que ele já consumiu.
+        3. Use emojis e um tom entusiasmado.
+        4. NUNCA sugira algo que já está no histórico.
+        5. Formate a resposta como: "Minha sugestão: **[NOME]**" (se for Livro, adicione " **por [AUTOR]**")\n\n**Sinopse:** [SINOPSE CURTA E PRECISA]\n\n**Por que você vai amar:** [MOTIVO BASEADO NO HISTÓRICO]"`
     };
 
     const response = await callGroqViaGAS([suggestionPrompt]);
@@ -351,7 +359,7 @@ async function generateInsight() {
     const randomItem = items[Math.floor(Math.random() * items.length)];
     const systemMessage = {
         role: 'system',
-        content: 'Você é um assistente curioso. O usuário tem uma biblioteca de livros, filmes e séries. Escolha o item fornecido e conte uma curiosidade curta e interessante sobre ele (máximo 2 frases). Responda de forma divertida.'
+        content: 'Você é um assistente curioso e bem informado. O usuário tem uma biblioteca de livros, filmes e séries. Sua tarefa é fornecer uma curiosidade REAL, PRECISA e fascinante sobre o item fornecido. Pesquise mentalmente detalhes técnicos, de bastidores ou históricos. Máximo 3 frases. Responda de forma divertida e inteligente.'
     };
 
     const userMessage = {
@@ -929,6 +937,77 @@ function renderLogin() {
 }
 
 
+function switchView(view) {
+    currentView = view;
+    render();
+}
+
+function renderStatsView() {
+    const stats = getStats();
+    return `
+        <div class="max-w-6xl mx-auto px-4 mt-6 pb-8">
+            <h2 class="text-3xl font-bold mb-6 text-gray-800 flex items-center gap-2">
+                📊 Estatísticas Detalhadas
+            </h2>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div class="bg-white rounded-2xl p-6 shadow-md border-b-4 border-purple-500">
+                    <div class="text-3xl font-bold text-purple-600">${stats.total}</div>
+                    <div class="text-sm text-gray-600 font-medium tracking-tight">Total de Itens</div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-md border-b-4 border-blue-500">
+                    <div class="text-3xl font-bold text-blue-600">${stats.books}</div>
+                    <div class="text-sm text-gray-600 font-medium tracking-tight">Livros</div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-md border-b-4 border-pink-500">
+                    <div class="text-3xl font-bold text-pink-600">${stats.series}</div>
+                    <div class="text-sm text-gray-600 font-medium tracking-tight">Séries</div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-md border-b-4 border-yellow-500">
+                    <div class="text-3xl font-bold text-yellow-600">${stats.movies}</div>
+                    <div class="text-sm text-gray-600 font-medium tracking-tight">Filmes</div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 border-b pb-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800">Gráfico de Atividade</h3>
+                        <p class="text-gray-500 text-sm">Visualize sua jornada no tempo</p>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-1 bg-gray-100 rounded-xl p-1">
+                        <button onclick="chartPeriod = 'daily'; render();" class="px-4 py-2 rounded-lg text-sm font-bold transition-all ${chartPeriod === 'daily' ? 'bg-white shadow-sm text-purple-600' : 'text-gray-500'}">Diário</button>
+                        <button onclick="chartPeriod = 'monthly'; render();" class="px-4 py-2 rounded-lg text-sm font-bold transition-all ${chartPeriod === 'monthly' ? 'bg-white shadow-sm text-purple-600' : 'text-gray-500'}">Mensal</button>
+                        <button onclick="chartPeriod = 'yearly'; render();" class="px-4 py-2 rounded-lg text-sm font-bold transition-all ${chartPeriod === 'yearly' ? 'bg-white shadow-sm text-purple-600' : 'text-gray-500'}">Anual</button>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-2 mb-8 bg-gray-50 p-2 rounded-xl">
+                    <button onclick="chartType = 'all'; render();" class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${chartType === 'all' ? 'bg-purple-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-200'}">Todos</button>
+                    <button onclick="chartType = 'books'; render();" class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${chartType === 'books' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-200'}">📖 Livros</button>
+                    <button onclick="chartType = 'series'; render();" class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${chartType === 'series' ? 'bg-pink-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-200'}">📺 Séries</button>
+                    <button onclick="chartType = 'movies'; render();" class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${chartType === 'movies' ? 'bg-yellow-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-200'}">🎬 Filmes</button>
+                </div>
+
+                <div class="min-h-[350px]">
+                    ${renderChart()}
+                </div>
+            </div>
+
+            <!-- Botão Voltar mobile -->
+            <div class="mt-6 md:hidden">
+                <button 
+                    onclick="switchView('dashboard')"
+                    class="w-full bg-white text-gray-700 py-4 rounded-2xl font-bold shadow-md border border-gray-100 flex items-center justify-center gap-2"
+                >
+                    🏠 Voltar para o Início
+                </button>
+            </div>
+        </div>
+    `;
+}
+
 function render() {
     if (!currentUser) {
         renderLogin();
@@ -944,26 +1023,43 @@ function render() {
 
     document.getElementById('app').innerHTML = `
         <!-- Header -->
-        <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 shadow-lg">
-            <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center text-center md:text-left gap-4">
+        <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 shadow-lg shadow-purple-200/50">
+            <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center text-center md:text-left gap-6">
                 <div class="flex-1">
-                    <h1 class="text-3xl font-bold mb-1 app-title">Mundo da Alice</h1>
-                    <p class="text-purple-100 text-sm italic">"${currentQuote.quote}"</p>
-                    <p class="text-[10px] text-purple-200">— ${currentQuote.book}</p>
+                    <h1 class="text-3xl md:text-4xl font-bold mb-1 app-title cursor-pointer" onclick="switchView('dashboard')">Mundo da Alice</h1>
+                    <p class="text-purple-100 text-sm italic opacity-90">"${currentQuote.quote}"</p>
+                    <p class="text-[10px] text-purple-200 uppercase tracking-widest font-bold mt-1">— ${currentQuote.book}</p>
                     ${loading ? '<p class="text-purple-200 mt-2 flex items-center justify-center md:justify-start gap-2"><span class="loading"></span> Carregando...</p>' : ''}
                 </div>
-                <div class="flex flex-col items-center md:items-end gap-2">
-                    <p class="text-purple-100 text-sm">👤 ${currentUser.username}</p>
-                    <div class="flex gap-2">
+                <div class="flex flex-col items-center md:items-end gap-3">
+                    <div class="flex items-center gap-2 bg-black/10 px-3 py-1.5 rounded-full backdrop-blur-sm">
+                        <span class="text-xs">👤 ${currentUser.username}</span>
+                    </div>
+                    <div class="flex flex-wrap justify-center md:justify-end gap-2">
+                        <button
+                            onclick="switchView('dashboard')"
+                            class="bg-white/20 hover:bg-white/30 text-white p-2.5 rounded-xl text-sm font-bold transition-all hover:scale-105 active:scale-95 flex items-center gap-2 ${currentView === 'dashboard' ? 'bg-white/40 ring-2 ring-white/50' : ''}"
+                            title="Início"
+                        >
+                            🏠 <span class="hidden lg:inline">Início</span>
+                        </button>
+                        <button
+                            onclick="switchView('stats')"
+                            class="bg-white/20 hover:bg-white/30 text-white p-2.5 rounded-xl text-sm font-bold transition-all hover:scale-105 active:scale-95 flex items-center gap-2 ${currentView === 'stats' ? 'bg-white/40 ring-2 ring-white/50' : ''}"
+                            title="Estatísticas"
+                        >
+                            📊 <span class="hidden lg:inline">Estatísticas</span>
+                        </button>
                         <button
                             onclick="handleRecap();"
-                            class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
+                            class="bg-white/20 hover:bg-white/30 text-white p-2.5 rounded-xl text-sm font-bold transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
+                            title="Recap"
                         >
-                            ✨ Recap
+                            ✨ <span class="hidden lg:inline">Recap</span>
                         </button>
                         <button
                             onclick="handleLogout();"
-                            class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                            class="bg-white/10 hover:bg-red-500/40 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/10"
                         >
                             Sair
                         </button>
@@ -972,130 +1068,129 @@ function render() {
             </div>
         </div>
 
-        <!-- Stats -->
-        <div class="max-w-6xl mx-auto px-4 mt-6 mb-6">
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-4"> 
-                <div class="bg-white rounded-xl p-4 shadow-md">
-                    <div class="text-2xl font-bold text-purple-600">${stats.total}</div>
-                    <div class="text-sm text-gray-600">Total</div>
+        ${currentView === 'stats' ? renderStatsView() : `
+        <!-- Stats Summary -->
+        <div class="max-w-6xl mx-auto px-4 mt-6">
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6"> 
+                <div class="bg-white rounded-[2rem] p-5 shadow-xl shadow-purple-500/5 border border-purple-50">
+                    <div class="text-2xl font-black text-purple-600">${stats.total}</div>
+                    <div class="text-[10px] uppercase font-bold text-gray-400 tracking-widest">Total</div>
                 </div>
-                <div class="bg-white rounded-xl p-4 shadow-md">
-                    <div class="text-2xl font-bold text-blue-600">${stats.books}</div>
-                    <div class="text-sm text-gray-600">Livros</div>
+                <div class="bg-white rounded-[2rem] p-5 shadow-xl shadow-blue-500/5 border border-blue-50">
+                    <div class="text-2xl font-black text-blue-600">${stats.books}</div>
+                    <div class="text-[10px] uppercase font-bold text-gray-400 tracking-widest">Livros</div>
                 </div>
-                <div class="bg-white rounded-xl p-4 shadow-md">
-                    <div class="text-2xl font-bold text-pink-600">${stats.series}</div>
-                    <div class="text-sm text-gray-600">Séries</div>
+                <div class="bg-white rounded-[2rem] p-5 shadow-xl shadow-pink-500/5 border border-pink-50">
+                    <div class="text-2xl font-black text-pink-600">${stats.series}</div>
+                    <div class="text-[10px] uppercase font-bold text-gray-400 tracking-widest">Séries</div>
+                 </div>
+                 <div class="bg-white rounded-[2rem] p-5 shadow-xl shadow-yellow-500/5 border border-yellow-50">
+                    <div class="text-2xl font-black text-yellow-600">${stats.movies}</div>
+                    <div class="text-[10px] uppercase font-bold text-gray-400 tracking-widest">Filmes</div> 
                 </div>
-                 <div class="bg-white rounded-xl p-4 shadow-md">
-                    <div class="text-2xl font-bold text-yellow-600">${stats.movies}</div>
-                    <div class="text-sm text-gray-600">Filmes</div> 
-                </div>
-                <div class="bg-white rounded-xl p-4 shadow-md">
-                    <div class="text-2xl font-bold text-green-600">${stats.completed}</div>
-                    <div class="text-sm text-gray-600">Concluídos</div>
+                <div class="bg-white rounded-[2rem] p-5 shadow-xl shadow-green-500/5 border border-green-50">
+                    <div class="text-2xl font-black text-green-600">${stats.completed}</div>
+                    <div class="text-[10px] uppercase font-bold text-gray-400 tracking-widest">Concluídos</div>
                 </div>
             </div>
         </div>
 
         <div class="max-w-6xl mx-auto px-4 pb-8">
             <!-- Controls -->
-            <div class="bg-white rounded-xl shadow-md p-4 mb-6">
-                <div class="space-y-3">
+            <div class="bg-white rounded-2xl shadow-xl shadow-purple-100/50 p-5 mb-6 border border-purple-50">
+                <div class="space-y-4">
                     <div class="flex gap-2">
-                        <input
-                            type="text"
-                            id="searchInput"
-                            placeholder="🔍 Buscar..."
-                            value="${searchInput}"
-                            onkeypress="if(event.key === 'Enter') performSearch();"
-                            class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 text-sm"
-                        />
+                        <div class="relative flex-1">
+                            <input
+                                type="text"
+                                id="searchInput"
+                                placeholder="Buscar nos registros..."
+                                value="${searchInput}"
+                                onkeypress="if(event.key === 'Enter') performSearch();"
+                                class="w-full pl-10 pr-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-purple-500 text-sm transition-all"
+                            />
+                            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+                        </div>
                         <button
                             onclick="performSearch();"
-                            class="px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors text-sm whitespace-nowrap"
+                            class="px-6 py-3 bg-purple-600 text-white rounded-2xl font-bold hover:bg-purple-700 transition-all shadow-lg shadow-purple-200 active:scale-95 flex items-center justify-center min-w-[60px]"
                         >
-                            Buscar
+                            <span class="hidden sm:inline">Buscar</span>
+                            <span class="sm:hidden text-lg">🔍</span>
                         </button>
                         ${searchTerm ? `
                         <button
                             onclick="searchTerm = ''; searchInput = ''; render();"
-                            class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors text-sm"
+                            class="px-4 py-3 bg-gray-100 text-gray-500 rounded-2xl font-bold hover:bg-gray-200 transition-colors"
                         >
                             ✕
                         </button>
                         ` : ''}
                     </div>
                     
-                    <div class="flex gap-2 overflow-x-auto pb-2">
+                    <div class="flex gap-2 flex-wrap sm:flex-nowrap sm:overflow-x-auto pb-2 no-scrollbar">
                         <button
                             onclick="filter = 'all'; resetPagination(); render();"
-                            class="px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${filter === 'all' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700'}"
+                            class="px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap text-sm flex items-center gap-2 ${filter === 'all' ? 'bg-purple-600 text-white shadow-lg shadow-purple-200 scale-105' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}"
                         >
                             Todos
                         </button>
                         <button
                             onclick="filter = 'books'; resetPagination(); render();"
-                            class="px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${filter === 'books' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}"
+                            class="px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap text-sm flex items-center gap-2 ${filter === 'books' ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 scale-105' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}"
                         >
-                            📖 Livros
+                            📖 <span class="hidden sm:inline">Livros</span>
                         </button>
                         <button
                             onclick="filter = 'series'; resetPagination(); render();"
-                            class="px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${filter === 'series' ? 'bg-pink-600 text-white' : 'bg-gray-100 text-gray-700'}"
+                            class="px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap text-sm flex items-center gap-2 ${filter === 'series' ? 'bg-pink-600 text-white shadow-lg shadow-pink-200 scale-105' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}"
                         >
-                            📺 Séries
+                            📺 <span class="hidden sm:inline">Séries</span>
                         </button>
                          <button
                             onclick="filter = 'movies'; resetPagination(); render();"
-                            class="px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${filter === 'movies' ? 'bg-yellow-600 text-white' : 'bg-gray-100 text-gray-700'}"
+                            class="px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap text-sm flex items-center gap-2 ${filter === 'movies' ? 'bg-yellow-600 text-white shadow-lg shadow-yellow-100 scale-105' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}"
                         >
-                            🎬 Filmes
+                            🎬 <span class="hidden sm:inline">Filmes</span>
                         </button> 
                     </div>
 
+
+
                     <div class="grid grid-cols-4 gap-2">
                         <button
-                            onclick="showCharts = !showCharts; render();"
-                            class="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-3 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow text-sm"
-                            ${loading ? 'disabled' : ''}
-                        >
-                            <span class="hidden sm:inline">📊 Gráficos</span>
-                            <span class="sm:hidden">📊</span>
-                        </button>
-                        <button
                             onclick="showForm = !showForm; render();"
-                            class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow text-sm"
+                            class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-3 rounded-2xl font-bold hover:shadow-lg transition-all text-sm flex items-center justify-center gap-2"
                             ${loading ? 'disabled' : ''}
                         >
-                            <span class="hidden sm:inline">➕ Adicionar</span>
-                            <span class="sm:hidden">➕</span>
+                            <span>➕</span>
+                            <span class="hidden sm:inline">Adicionar</span>
                         </button>
                         <button
                             onclick="loadData();"
-                            class="bg-green-600 text-white px-3 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow text-sm"
+                            class="bg-green-600 text-white px-3 py-3 rounded-2xl font-bold hover:shadow-lg transition-all text-sm flex items-center justify-center gap-2"
                             ${loading ? 'disabled' : ''}
                         >
-                            <span class="hidden sm:inline">🔄 Atualizar</span>
-                            <span class="sm:hidden">🔄</span>
+                            <span>🔄</span>
+                            <span class="hidden sm:inline">Atualizar</span>
                         </button>
-                        <div class="relative">
+                        <div class="relative col-span-2">
                             <button
                                 onclick="showSortMenu = !showSortMenu; render();"
-                                class="w-full bg-gray-200 text-gray-700 px-3 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow text-sm"
+                                class="w-full bg-gray-100 text-gray-700 px-3 py-3 rounded-2xl font-bold hover:bg-gray-200 transition-all text-sm flex items-center justify-center gap-2"
                             >
-                                <span class="hidden sm:inline">🔽 Ordenar</span>
-                                <span class="sm:hidden">🔽</span>
+                                <span>🔽</span>
+                                <span class="hidden sm:inline">Ordenar Lista</span>
                             </button>
                             ${showSortMenu ? `
-                            <div class="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg p-2 z-50">
-                                <button onclick="sortBy='title-asc'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded text-sm">Título A–Z</button>
-                                <button onclick="sortBy='title-desc'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded text-sm">Título Z–A</button>
-                                <button onclick="sortBy='date-desc'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded text-sm">Mais recentes</button>
-                                <button onclick="sortBy='date-asc'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded text-sm">Mais antigos</button>
-                                <button onclick="sortBy='category'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded text-sm">Categoria</button>
-                                <button onclick="sortBy='status'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded text-sm">Status</button>
-                                <button onclick="sortBy='rating'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded text-sm">Avaliação</button>
+                            <div class="absolute right-0 mt-2 w-48 bg-white border border-purple-50 rounded-2xl shadow-2xl p-2 z-[100] animate-fade-in max-h-64 overflow-y-auto shadow-purple-200/50">
+                                <button onclick="sortBy='title-asc'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-purple-50 rounded-xl text-sm transition-colors">Título A–Z</button>
+                                <button onclick="sortBy='title-desc'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-purple-50 rounded-xl text-sm transition-colors">Título Z–A</button>
+                                <button onclick="sortBy='date-desc'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-purple-50 rounded-xl text-sm transition-colors font-bold text-purple-600">Mais recentes</button>
+                                <button onclick="sortBy='date-asc'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-purple-50 rounded-xl text-sm transition-colors">Mais antigos</button>
+                                <button onclick="sortBy='category'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-purple-50 rounded-xl text-sm transition-colors">Categoria</button>
+                                <button onclick="sortBy='status'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-purple-50 rounded-xl text-sm transition-colors">Status</button>
+                                <button onclick="sortBy='rating'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-purple-50 rounded-xl text-sm transition-colors">Avaliação</button>
                             </div>
                             ` : ''}
                         </div>
@@ -1103,80 +1198,19 @@ function render() {
                 </div>
             </div>
 
-            <!-- Charts Panel -->
-            ${showCharts ? `
-            <div class="bg-white rounded-xl shadow-lg p-4 md:p-6 mb-6">
-                <h2 class="text-xl md:text-2xl font-bold mb-4 text-gray-800">📊 Estatísticas</h2>
-                
-                <div class="space-y-3">
-                    <div class="flex gap-2 bg-gray-100 rounded-lg p-1 overflow-x-auto">
-                        <button
-                            onclick="chartPeriod = 'daily'; render();"
-                            class="px-3 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${chartPeriod === 'daily' ? 'bg-white shadow-sm' : ''}"
-                        >
-                            Diário
-                        </button>
-                        <button
-                            onclick="chartPeriod = 'monthly'; render();"
-                            class="px-3 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${chartPeriod === 'monthly' ? 'bg-white shadow-sm' : ''}"
-                        >
-                            Mensal
-                        </button>
-                        <button
-                            onclick="chartPeriod = 'yearly'; render();"
-                            class="px-3 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${chartPeriod === 'yearly' ? 'bg-white shadow-sm' : ''}"
-                        >
-                            Anual
-                        </button>
-                    </div>
-
-                    <div class="flex gap-2 bg-gray-100 rounded-lg p-1 overflow-x-auto">
-                        <button
-                            onclick="chartType = 'all'; render();"
-                            class="px-3 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${chartType === 'all' ? 'bg-white shadow-sm' : ''}"
-                        >
-                            Todos
-                        </button>
-                        <button
-                            onclick="chartType = 'books'; render();"
-                            class="px-3 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${chartType === 'books' ? 'bg-white shadow-sm' : ''}"
-                        >
-                            📖 Livros
-                        </button>
-                        <button
-                            onclick="chartType = 'series'; render();"
-                            class="px-3 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${chartType === 'series' ? 'bg-white shadow-sm' : ''}"
-                        >
-                            📺 Séries
-                        </button>
-                         <button
-                            onclick="chartType = 'movies'; render();"
-                            class="px-3 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-sm ${chartType === 'movies' ? 'bg-white shadow-sm' : ''}"
-                        >
-                            🎬 Filmes
-                        </button> 
-                    </div>
-                </div>
-
-                <div class="mt-6">
-                    ${renderChart()}
-                </div>
-            </div>
-            ` : ''}
-
             <!-- Form -->
             ${showForm ? `
-            <div id="formPanel" class="bg-white rounded-xl shadow-lg p-4 md:p-6 mb-6">
-                <h2 class="text-xl md:text-2xl font-bold mb-4 text-gray-800">
-                    ${editingId !== null ? 'Editar Item' : 'Adicionar Novo Item'}
+            <div id="formPanel" class="bg-white rounded-2xl shadow-xl p-6 mb-6 border border-purple-100 animate-fade-in">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">
+                    ${editingId !== null ? '✨ Editar Registro' : '➕ Novo Registro'}
                 </h2>
                 <div class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 px-1">Categoria</label>
                             <select
                                 onchange="formData.category = this.value; render();"
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                class="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-purple-500 text-sm"
                                 ${loading ? 'disabled' : ''}
                             >
                                 ${categoryOptions.map(opt => `<option value="${opt}" ${formData.category === opt ? 'selected' : ''}>${opt}</option>`).join('')}
@@ -1184,10 +1218,10 @@ function render() {
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 px-1">Status</label>
                             <select
                                 onchange="formData.status = this.value;"
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                class="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-purple-500 text-sm"
                                 ${loading ? 'disabled' : ''}
                             >
                                 ${statusOptions.map(opt => `<option value="${opt}" ${formData.status === opt ? 'selected' : ''}>${opt}</option>`).join('')}
@@ -1195,24 +1229,26 @@ function render() {
                         </div>
 
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Título *</label>
+                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 px-1">Título do Item</label>
                             <input
                                 type="text"
                                 value="${formData.title}"
                                 oninput="formData.title = this.value;"
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                placeholder="Ex: O Pequeno Príncipe"
+                                class="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-purple-500 text-sm"
                                 ${loading ? 'disabled' : ''}
                             />
                         </div>
 
                         ${formData.category === 'Livro' ? `
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Autor</label>
+                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 px-1">Autor(a)</label>
                             <input
                                 type="text"
                                 value="${formData.author}"
                                 oninput="formData.author = this.value;"
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                placeholder="Ex: Antoine de Saint-Exupéry"
+                                class="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-purple-500 text-sm"
                                 ${loading ? 'disabled' : ''}
                             />
                         </div>
@@ -1220,68 +1256,68 @@ function render() {
 
                         ${formData.category !== 'Filme' ? `
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">
-                                    ${formData.category === 'Livro' ? 'Páginas' : 'Episódios'}
+                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 px-1">
+                                    ${formData.category === 'Livro' ? 'Total de Páginas' : 'Total de Episódios'}
                                 </label>
                                 <input
                                     type="number"
                                     value="${formData.pages}"
                                     oninput="formData.pages = this.value;"
-                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                    class="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-purple-500 text-sm"
                                     ${loading ? 'disabled' : ''}
                                 />
                             </div>
                         ` : ''} 
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Avaliação</label>
+                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 px-1">Sua Avaliação</label>
                             <select
                                 onchange="formData.rating = this.value;"
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                class="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-purple-500 text-sm"
                                 ${loading ? 'disabled' : ''}
                             >
-                                <option value="">Selecione...</option>
+                                <option value="">Como foi a experiência?</option>
                                 ${ratingOptions.map(opt => `<option value="${opt}" ${formData.rating === opt ? 'selected' : ''}>${opt}</option>`).join('')}
                             </select>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Data</label>
+                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 px-1">Data</label>
                             <input
                                 type="date"
                                 value="${formData.date}"
                                 onchange="formData.date = this.value;"
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                                class="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-purple-500 text-sm"
                                 ${loading ? 'disabled' : ''}
                             />
                         </div>
 
                         ${formData.category === 'Série' || formData.category === 'Filme' ? `
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">País</label>
+                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 px-1">País de Origem</label>
                             <select
                                 onchange="formData.country = this.value;"
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                class="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-purple-500 text-sm"
                                 ${loading ? 'disabled' : ''}
                             >
-                                <option value="">Selecione...</option>
+                                <option value="">Opcional</option>
                                 ${countryOptions.map(opt => `<option value="${opt}" ${formData.country === opt ? 'selected' : ''}>${opt}</option>`).join('')}
                             </select>
                         </div>
                         ` : ''} 
                     </div>
 
-                    <div class="flex flex-col sm:flex-row gap-3 pt-4">
+                    <div class="flex flex-col sm:flex-row gap-3 pt-6">
                         <button
                             onclick="handleSubmit();"
-                            class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-medium hover:shadow-lg transition-shadow disabled:opacity-50 text-sm"
+                            class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-2xl font-bold hover:shadow-lg transition-all disabled:opacity-50 text-base shadow-purple-200"
                             ${loading ? 'disabled' : ''}
                         >
-                            ${loading ? 'Salvando...' : (editingId !== null ? 'Atualizar' : 'Adicionar')}
+                            ${loading ? 'Salvando...' : (editingId !== null ? 'Salvar Alterações' : 'Confirmar e Salvar')}
                         </button>
                         <button
                             onclick="resetForm(); render();"
-                            class="sm:w-auto px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors disabled:opacity-50 text-sm"
+                            class="sm:w-auto px-8 py-4 bg-gray-100 text-gray-600 rounded-2xl font-bold hover:bg-gray-200 transition-colors disabled:opacity-50"
                             ${loading ? 'disabled' : ''}
                         >
                             Cancelar
@@ -1294,60 +1330,71 @@ function render() {
             <!-- Items List -->
             <div class="space-y-4">
                 ${loading && items.length === 0 ? `
-                <div class="bg-white rounded-xl shadow-md p-12 text-center">
-                    <div class="text-6xl mb-4">⏳</div>
-                    <p class="text-gray-500 text-lg">Carregando dados do Google Sheets...</p>
+                <div class="bg-white rounded-3xl shadow-md p-16 text-center border border-gray-50">
+                    <div class="loading w-12 h-12 mb-6 border-purple-500 border-t-transparent"></div>
+                    <p class="text-gray-400 font-medium">Conectando ao seu Mundo...</p>
                 </div>
                 ` : displayedItems.length === 0 ? `
-                <div class="bg-white rounded-xl shadow-md p-12 text-center">
-                    <div class="text-6xl mb-4">${searchTerm ? '🔍' : '📚'}</div>
-                    <p class="text-gray-500 text-lg">
-                        ${searchTerm ? 'Nenhum resultado encontrado' : 'Nenhum item encontrado'}
+                <div class="bg-white rounded-3xl shadow-md p-16 text-center border border-gray-50">
+                    <div class="text-6xl mb-6">${searchTerm ? '🔍' : '✨'}</div>
+                    <p class="text-gray-500 text-xl font-bold">
+                        ${searchTerm ? 'Nenhum resultado para sua busca' : 'Sua estante está vazia'}
                     </p>
+                    <p class="text-gray-400 mt-2">Que tal adicionar algo novo hoje?</p>
                 </div>
                 ` : displayedItems.map((item) => `
-                <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-4 md:p-6">
-                    <div class="space-y-4">
-                        <div class="flex items-start gap-3">
-                            <div class="text-3xl" title="${item.category}">
+                <div class="bg-white rounded-3xl shadow-sm hover:shadow-xl hover:scale-[1.01] transition-all p-5 md:p-6 border border-gray-100 group">
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <div class="flex items-start gap-4 flex-1">
+                            <div class="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center text-3xl shadow-inner group-hover:bg-purple-50 transition-colors" title="${item.category}">
                                 ${item.category === 'Livro' ? '📖' :
             (item.category === 'Série' || item.category === 'Serie') ? '📺' :
                 (item.category === 'Filme' || item.category === 'Filmes') ? '🎬' : '❓'}
                             </div>
                             <div class="flex-1 min-w-0">
-                                <h3 class="text-lg md:text-xl font-bold text-gray-800 break-words">${item.title}</h3>
-                                ${item.author ? `<p class="text-gray-600 mt-1 text-sm">${item.author}</p>` : ''}
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-[10px] font-black uppercase tracking-widest text-purple-400">${item.category}</span>
+                                    ${item.country ? `<span class="text-[10px] bg-gray-100 px-2 py-0.5 rounded text-gray-500 font-bold">${item.country}</span>` : ''}
+                                </div>
+                                <h3 class="text-xl font-black text-gray-800 break-words leading-tight">${item.title}</h3>
+                                ${item.author ? `<p class="text-gray-500 mt-1 font-medium text-sm flex items-center gap-1">✍️ ${item.author}</p>` : ''}
+                                
+                                <div class="flex flex-wrap gap-2 mt-4">
+                                    <span class="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-xl text-xs font-bold flex items-center gap-1.5">
+                                        <span class="w-2 h-2 rounded-full ${item.status === 'Lido' || item.status === 'Assistido' ? 'bg-green-500' : 'bg-yellow-500'}"></span>
+                                        ${item.status}
+                                    </span>
+                                    ${item.rating ? `
+                                    <span class="px-3 py-1.5 bg-yellow-50 text-yellow-700 rounded-xl text-xs font-bold border border-yellow-100">
+                                        ${item.rating}
+                                    </span>
+                                    ` : ''}
+                                    ${item.pages ? `
+                                    <span class="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-xl text-xs font-bold border border-blue-100">
+                                        📄 ${item.pages} ${item.category === 'Livro' ? 'págs' : 'eps'}
+                                    </span>
+                                    ` : ''}
+                                    ${item.date ? `<span class="px-3 py-1.5 bg-purple-50 text-purple-600 rounded-xl text-xs font-bold border border-purple-100">📅 ${formatDate(item.date)}</span>` : ''}
+                                </div>
                             </div>
                         </div>
 
-                        <div class="flex flex-wrap gap-2 text-xs md:text-sm">
-                            <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full font-medium">
-                                ${item.status}
-                            </span>
-                            ${item.rating ? `
-                            <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full font-medium">
-                                ${item.rating}
-                            </span>
-                            ` : ''}
-                            ${item.date ? `<span class="text-gray-600">📅 ${formatDate(item.date)}</span>` : ''}
-                            ${item.pages ? `<span class="text-gray-600">${item.pages} ${item.category === 'Livro' ? 'páginas' : 'episódios'}</span>` : ''}
-                            ${item.country ? `<span class="text-gray-600">🌍 ${item.country}</span>` : ''}
-                        </div>
-
-                        <div class="flex gap-2 pt-2">
+                        <div class="flex sm:flex-col gap-2 justify-end sm:justify-start">
                             <button
                                 onclick='handleEdit(${item.id})'
-                                class="flex-1 px-4 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors disabled:opacity-50"
+                                class="p-3 bg-blue-50 text-blue-600 rounded-2xl hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                                title="Editar"
                                 ${loading ? 'disabled' : ''}
                             >
-                                Editar
+                                ✏️
                             </button>
                             <button
                                 onclick="handleDelete(${item.id})"
-                                class="flex-1 px-4 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors disabled:opacity-50"
+                                class="p-3 bg-red-50 text-red-600 rounded-2xl hover:bg-red-600 hover:text-white transition-all shadow-sm"
+                                title="Excluir"
                                 ${loading ? 'disabled' : ''}
                             >
-                                Excluir
+                                🗑️
                             </button>
                         </div>
                     </div>
@@ -1355,23 +1402,24 @@ function render() {
                 `).join('')}
                 
                 ${hasMore && displayedItems.length > 0 ? `
-                <div class="flex justify-center py-6">
+                <div class="flex justify-center py-10">
                     <button
                         onclick="currentPage++; loadMoreItems(); render();"
-                        class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-lg font-medium hover:shadow-lg transition-shadow"
+                        class="bg-white text-purple-600 border-2 border-purple-600 px-10 py-4 rounded-2xl font-black hover:bg-purple-600 hover:text-white transition-all shadow-lg active:scale-95"
                     >
-                        Carregar mais (${filteredItems.length - displayedItems.length} restantes)
+                        Carregar mais +${filteredItems.length - displayedItems.length}
                     </button>
                 </div>
                 ` : ''}
                 
                 ${displayedItems.length > 0 && !hasMore ? `
-                <div class="text-center py-6 text-gray-500 text-sm">
-                    Todos os itens foram carregados 📚
+                <div class="text-center py-10 text-gray-400 font-bold text-sm tracking-widest uppercase">
+                    ✨ Fim da Estante ✨
                 </div>
                 ` : ''}
             </div>
         </div>
+        `}
 
         ${renderChat()}
         ${renderInsight()}
@@ -1394,8 +1442,9 @@ function render() {
                 <p class="text-white/60 mt-4 text-sm uppercase tracking-widest font-medium">Carregando Magia...</p>
             </div>
         </div>
-        ` : ''}
-    `;
+        ` : ''
+        }
+`;
 
     const input = document.getElementById('searchInput');
     if (input && document.activeElement === input) {
@@ -1418,6 +1467,7 @@ function render() {
         }, 100);
     }
 }
+
 
 function handleRecap() {
     showRecapModal = true;
@@ -1488,45 +1538,45 @@ function renderRecapModal() {
     if (!availableYears.includes(currentYear)) availableYears.unshift(currentYear);
 
     return `
-        <div class="fixed inset-0 z-[10000] flex items-center justify-center p-2 bg-black/60 backdrop-blur-sm animate-fade-in">
-            <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm overflow-hidden relative max-h-[95vh] flex flex-col">
-                <div class="bg-gradient-to-br from-purple-600 to-pink-600 p-6 text-white relative">
-                    <button 
-                        onclick="showRecapModal = false; render();"
-                        class="absolute top-4 right-4 text-white/80 hover:text-white text-xl"
-                    >✕</button>
-                    <div class="text-center">
-                        <div class="text-4xl mb-2">✨</div>
-                        <h2 class="text-2xl font-bold">Resumo ${recapYear}</h2>
-                        
-                        <div class="mt-2 inline-flex items-center gap-2 bg-white/20 p-1 rounded-lg backdrop-blur-md">
-                            <select 
-                                onchange="recapYear = parseInt(this.value); render();"
-                                class="bg-transparent text-white text-sm font-bold outline-none cursor-pointer px-2"
-                            >
-                                ${availableYears.map(y => `<option value="${y}" ${y == recapYear ? 'selected' : ''} class="text-gray-800">${y}</option>`).join('')}
-                            </select>
-                        </div>
+    <div class="fixed inset-0 z-[10000] flex items-center justify-center p-2 bg-black/60 backdrop-blur-sm animate-fade-in">
+        <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm overflow-hidden relative max-h-[95vh] flex flex-col">
+            <div class="bg-gradient-to-br from-purple-600 to-pink-600 p-6 text-white relative">
+                <button
+                    onclick="showRecapModal = false; render();"
+                    class="absolute top-4 right-4 text-white/80 hover:text-white text-xl"
+                >✕</button>
+                <div class="text-center">
+                    <div class="text-4xl mb-2">✨</div>
+                    <h2 class="text-2xl font-bold">Resumo ${recapYear}</h2>
+
+                    <div class="mt-2 inline-flex items-center gap-2 bg-white/20 p-1 rounded-lg backdrop-blur-md">
+                        <select
+                            onchange="recapYear = parseInt(this.value); render();"
+                            class="bg-transparent text-white text-sm font-bold outline-none cursor-pointer px-2"
+                        >
+                            ${availableYears.map(y => `<option value="${y}" ${y == recapYear ? 'selected' : ''} class="text-gray-800">${y}</option>`).join('')}
+                        </select>
                     </div>
                 </div>
-                
-                <div class="p-5 overflow-y-auto space-y-4">
-                    <div class="grid grid-cols-2 gap-3">
-                        <div class="bg-purple-50 p-3 rounded-2xl text-center border border-purple-100">
-                            <div class="text-2xl mb-1">📚</div>
-                            <div class="text-xl font-bold text-purple-700">${data.total}</div>
-                            <div class="text-[10px] text-purple-600 uppercase font-bold tracking-wider">Registros</div>
-                        </div>
-                        <div class="bg-pink-50 p-3 rounded-2xl text-center border border-pink-100">
-                            <div class="text-2xl mb-1">✅</div>
-                            <div class="text-xl font-bold text-pink-700">${data.completedItemsCount}</div>
-                            <div class="text-[10px] text-pink-600 uppercase font-bold tracking-wider">Concluídos</div>
-                        </div>
-                    </div>
+            </div>
 
-                    <!-- Highlights Section -->
-                    <div class="space-y-3">
-                        ${data.completedBooksCount > 0 ? `
+            <div class="p-5 overflow-y-auto space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-purple-50 p-3 rounded-2xl text-center border border-purple-100">
+                        <div class="text-2xl mb-1">📚</div>
+                        <div class="text-xl font-bold text-purple-700">${data.total}</div>
+                        <div class="text-[10px] text-purple-600 uppercase font-bold tracking-wider">Registros</div>
+                    </div>
+                    <div class="bg-pink-50 p-3 rounded-2xl text-center border border-pink-100">
+                        <div class="text-2xl mb-1">✅</div>
+                        <div class="text-xl font-bold text-pink-700">${data.completedItemsCount}</div>
+                        <div class="text-[10px] text-pink-600 uppercase font-bold tracking-wider">Concluídos</div>
+                    </div>
+                </div>
+
+                <!-- Highlights Section -->
+                <div class="space-y-3">
+                    ${data.completedBooksCount > 0 ? `
                         <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-100">
                             <div class="text-2xl">📖</div>
                             <div>
@@ -1539,7 +1589,7 @@ function renderRecapModal() {
                         </div>
                         ` : ''}
 
-                        ${data.completedSeriesCount > 0 ? `
+                    ${data.completedSeriesCount > 0 ? `
                         <div class="flex items-center gap-3 p-3 bg-pink-50 rounded-xl border border-pink-100">
                             <div class="text-2xl">📺</div>
                             <div>
@@ -1552,7 +1602,7 @@ function renderRecapModal() {
                         </div>
                         ` : ''}
 
-                         ${data.completedMoviesCount > 0 ? `
+                    ${data.completedMoviesCount > 0 ? `
                         <div class="flex items-center gap-3 p-3 bg-yellow-50 rounded-xl border border-yellow-100">
                             <div class="text-2xl">🎬</div>
                             <div>
@@ -1563,20 +1613,20 @@ function renderRecapModal() {
                             </div>
                         </div>
                         ` : ''}
-                    </div>
+                </div>
 
-                    <div class="grid grid-cols-2 gap-3">
-                        <div class="p-3 bg-gray-50 rounded-xl border border-gray-100">
-                            <div class="text-xs text-gray-500 uppercase font-bold mb-1">Status Favorito</div>
-                            <div class="text-sm font-bold text-gray-800 truncate">${data.mostUsedRating}</div>
-                        </div>
-                        <div class="p-3 bg-gray-50 rounded-xl border border-gray-100">
-                            <div class="text-xs text-gray-500 uppercase font-bold mb-1">Mais visto/lido</div>
-                            <div class="text-sm font-bold text-gray-800 truncate">${data.favoriteCategory}</div>
-                        </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                        <div class="text-xs text-gray-500 uppercase font-bold mb-1">Status Favorito</div>
+                        <div class="text-sm font-bold text-gray-800 truncate">${data.mostUsedRating}</div>
                     </div>
+                    <div class="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                        <div class="text-xs text-gray-500 uppercase font-bold mb-1">Mais visto/lido</div>
+                        <div class="text-sm font-bold text-gray-800 truncate">${data.favoriteCategory}</div>
+                    </div>
+                </div>
 
-                    ${data.total > 0 ? `
+                ${data.total > 0 ? `
                     <div class="pt-2">
                         <div class="flex justify-around items-end h-24 px-2 text-center">
                             <div class="flex flex-col items-center gap-1 w-full">
@@ -1601,17 +1651,17 @@ function renderRecapModal() {
                         <p class="text-sm">Nenhum registro em ${recapYear}</p>
                     </div>
                     `}
-                </div>
-
-                <div class="p-4 bg-gray-50 border-t flex justify-center">
-                    <button 
-                        onclick="showRecapModal = false; render();"
-                        class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-10 py-2.5 rounded-full font-bold shadow-lg text-sm"
-                    >
-                        Fechar
-                    </button>
-                </div>
             </div>
+
+            <div class="p-4 bg-gray-50 border-t flex justify-center">
+                <button
+                    onclick="showRecapModal = false; render();"
+                    class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-10 py-2.5 rounded-full font-bold shadow-lg text-sm"
+                >
+                    Fechar
+                </button>
+            </div>
+        </div>
         </div>
     `;
 }
@@ -1643,38 +1693,38 @@ if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
 
         const swCode = `
-    const CACHE_NAME = 'biblioteca-v3';
+const CACHE_NAME = 'biblioteca-v3';
 
-    self.addEventListener('install', (e) => {
-        self.skipWaiting();
-        e.waitUntil(
-            caches.open(CACHE_NAME).then((cache) => {
-                return cache.addAll(['./', './biblioteca.html', './style.css', './script.js']);
-            })
-        );
-    });
+self.addEventListener('install', (e) => {
+    self.skipWaiting();
+    e.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => {
+            return cache.addAll(['./', './biblioteca.html', './style.css', './script.js']);
+        })
+    );
+});
 
-    self.addEventListener('activate', (e) => {
-        e.waitUntil(
-            caches.keys().then((keyList) => {
-                return Promise.all(keyList.map((key) => {
-                    if (key !== CACHE_NAME) {
-                        return caches.delete(key);
-                    }
-                }));
-            })
-        );
-        return self.clients.claim();
-    });
+self.addEventListener('activate', (e) => {
+    e.waitUntil(
+        caches.keys().then((keyList) => {
+            return Promise.all(keyList.map((key) => {
+                if (key !== CACHE_NAME) {
+                    return caches.delete(key);
+                }
+            }));
+        })
+    );
+    return self.clients.claim();
+});
 
-    self.addEventListener('fetch', (e) => {
-        e.respondWith(
-            caches.match(e.request).then((response) => {
-                return response || fetch(e.request);
-            })
-        );
-    });
-    `;
+self.addEventListener('fetch', (e) => {
+    e.respondWith(
+        caches.match(e.request).then((response) => {
+            return response || fetch(e.request);
+        })
+    );
+});
+`;
 
         const blob = new Blob([swCode], { type: 'application/javascript' });
         const swUrl = URL.createObjectURL(blob);
