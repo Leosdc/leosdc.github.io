@@ -446,7 +446,7 @@ function renderChat() {
                     <img src="alice_face_icon.png" alt="Alice" class="w-8 h-8 rounded-full object-cover" />
                     <div>
                         <h3 class="font-bold text-sm">Alice</h3>
-                        <p class="text-[10px] text-purple-100">Pronto para ajudar! ✨</p>
+                        <p class="text-[10px] text-purple-100">Pronta para ajudar! ✨</p>
                     </div>
                 </div>
                 <button onclick="chatOpen = false; render();" class="hover:bg-white/20 p-1 rounded-lg transition-colors">
