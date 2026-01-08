@@ -144,7 +144,6 @@ async function handleRegister() {
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
-            mode: 'no-cors',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -155,16 +154,22 @@ async function handleRegister() {
             })
         });
 
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        const result = await response.json();
 
-        currentUser = { username: loginData.username };
-        localStorage.setItem('mundoAliceUser', JSON.stringify(currentUser));
-        localStorage.setItem('mundoAlicePass', loginData.password);
-        showNotification('✨ Cadastro realizado com sucesso!');
-        loadData();
+        if (result.success) {
+            currentUser = { username: loginData.username };
+            localStorage.setItem('mundoAliceUser', JSON.stringify(currentUser));
+            localStorage.setItem('mundoAlicePass', loginData.password);
+            showNotification('✨ Cadastro realizado com sucesso!');
+            loadData();
+        } else {
+            showNotification(result.error || 'Erro ao cadastrar', 'error');
+            loading = false;
+            renderLogin();
+        }
     } catch (error) {
         console.error('Erro no cadastro:', error);
-        showNotification('Erro ao cadastrar. Tente novamente.', 'error');
+        showNotification('Erro ao cadastrar. Verifique sua conexão.', 'error');
         loading = false;
         renderLogin();
     }
