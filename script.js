@@ -673,10 +673,17 @@ async function handleSubmit() {
         return;
     }
 
-    let finalDate = formData.date;
-    if (formData.date && formData.date.includes('-')) {
-        const parts = formData.date.split('-');
-        finalDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+    // Converte data para DD/MM/YYYY se necessário
+    let finalDate = '';
+    if (formData.date) {
+        if (formData.date.includes('-')) {
+            // Formato YYYY-MM-DD (input date)
+            const parts = formData.date.split('-');
+            finalDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        } else {
+            // Já está em outro formato, tenta formatar
+            finalDate = formatDate(formData.date);
+        }
     }
 
     const itemData = {
@@ -685,232 +692,216 @@ async function handleSubmit() {
         pages: formData.pages,
         status: formData.status,
         rating: formData.rating,
-        date: formData.date ? formatDate(formData.date) : '',
+        date: finalDate,
         category: formData.category,
         country: formData.country
     };
 
-    if (editingId !== null) {
-        const oldItem = items[editingId];
-        await saveToSheet('update', {
-            oldTitle: oldItem.title,
-            ...itemData
-        });
-        showNotification('✨ Item atualizado com sucesso!');
-    } else {
-        await saveToSheet('add', itemData);
-        showNotification('✨ Item adicionado com sucesso!');
+    async function handleDelete(index) {
+        if (confirm('Deseja realmente excluir este item?')) {
+            const item = items[index];
+            await saveToSheet('delete', { title: item.title });
+            showNotification('🗑️ Item excluído com sucesso!');
+        }
     }
 
-    resetForm();
-    render();
-}
-
-async function handleDelete(index) {
-    if (confirm('Deseja realmente excluir este item?')) {
+    function handleEdit(index) {
         const item = items[index];
-        await saveToSheet('delete', { title: item.title });
-        showNotification('🗑️ Item excluído com sucesso!');
-    }
-}
+        editingId = index;
 
-function handleEdit(index) {
-    const item = items[index];
-    editingId = index;
-
-    let formattedDate = '';
-    if (item.date) {
-        const dateObj = toValidDate(item.date);
-        if (dateObj) {
-            const y = dateObj.getFullYear();
-            const m = String(dateObj.getMonth() + 1).padStart(2, '0');
-            const d = String(dateObj.getDate()).padStart(2, '0');
-            formattedDate = `${y}-${m}-${d}`;
-        }
-    }
-
-    formData = {
-        title: item.title,
-        author: item.author || '',
-        pages: item.pages.toString(),
-        status: item.status,
-        rating: item.rating,
-        date: formattedDate,
-        category: item.category,
-        country: item.country || ''
-    };
-    showForm = true;
-    render();
-}
-
-function resetForm() {
-    formData = {
-        title: '',
-        author: '',
-        pages: '',
-        status: 'Quero ler/assistir',
-        rating: '',
-        date: '',
-        category: 'Livro',
-        country: ''
-    };
-    showForm = false;
-    editingId = null;
-}
-
-function getFilteredItems() {
-    console.log('Filtrando por:', filter, 'Termo:', searchTerm);
-    let filtered = items.filter(item => {
-        const cat = item.category;
-        const matchesFilter = filter === 'all' ||
-            (filter === 'books' && cat === 'Livro') ||
-            (filter === 'series' && (cat === 'Série' || cat === 'Serie')) ||
-            (filter === 'movies' && (cat === 'Filme' || cat === 'Filmes'));
-        const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (item.author && item.author.toLowerCase().includes(searchTerm.toLowerCase()));
-        return matchesFilter && matchesSearch;
-    });
-
-    filtered.sort((a, b) => {
-        switch (sortBy) {
-            case 'title-asc':
-                return a.title.localeCompare(b.title);
-            case 'title-desc':
-                return b.title.localeCompare(a.title);
-            case 'date-asc':
-                return compareDates(a.date, b.date);
-            case 'date-desc':
-                return compareDates(b.date, a.date);
-            case 'category':
-                return a.category.localeCompare(b.category);
-            case 'status':
-                const statusOrder = ['Quero ler/assistir', 'Lido', 'Assistido', 'Desisti'];
-                return statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status);
-            case 'rating':
-                const ratingOrder = ['Maravilhoso 😍', 'Muito bom 😊', 'Bom 🙂', 'Mais ou menos 🤨', 'Ruim 🙁', 'Péssimo 😒'];
-                const aRating = a.rating ? ratingOrder.indexOf(a.rating) : 999;
-                const bRating = b.rating ? ratingOrder.indexOf(b.rating) : 999;
-                return aRating - bRating;
-            default:
-                return 0;
-        }
-    });
-
-    return filtered;
-}
-
-function compareDates(dateA, dateB) {
-    const dA = toValidDate(dateA);
-    const dB = toValidDate(dateB);
-
-    if (!dA && !dB) return 0;
-    if (!dA) return 1;
-    if (!dB) return -1;
-
-    return dA.getTime() - dB.getTime();
-}
-
-function getStats() {
-    return {
-        total: items.length,
-        books: items.filter(i => i.category === 'Livro').length,
-        series: items.filter(i => i.category === 'Série').length,
-        movies: items.filter(i => i.category === 'Filme').length,
-        completed: items.filter(i => i.status === 'Lido' || i.status === 'Assistido').length
-    };
-}
-
-function getChartData() {
-    const filteredItems = items.filter(item => {
-        if (chartType === 'books') return item.category === 'Livro';
-        if (chartType === 'series') return item.category === 'Série';
-        if (chartType === 'movies') return item.category === 'Filme';
-        return true;
-    }).filter(item => item.status === 'Lido' || item.status === 'Assistido');
-
-    console.log('📊 Itens filtrados para gráfico:', filteredItems.length);
-
-    const dataMap = {};
-
-    filteredItems.forEach(item => {
-        if (!item.date) {
-            console.log('⚠️ Item sem data:', item.title);
-            return;
-        }
-
-        // Converte a data para o formato DD/MM/YYYY se necessário
-        let dateStr = item.date;
-
-        // Se for um objeto Date ou timestamp ISO
-        if (typeof dateStr === 'object' || dateStr.includes('T')) {
-            const dateObj = new Date(dateStr);
-            const day = String(dateObj.getDate()).padStart(2, '0');
-            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-            const year = dateObj.getFullYear();
-            dateStr = `${day}/${month}/${year}`;
-        }
-
-        const parts = dateStr.split('/');
-        if (parts.length !== 3) {
-            console.log('⚠️ Data em formato inesperado:', item.date, 'para item:', item.title);
-            return;
-        }
-
-        const day = parts[0];
-        const month = parts[1];
-        const year = parts[2];
-
-        let key;
-        if (chartPeriod === 'daily') {
-            key = `${day}/${month}/${year}`;
-        } else if (chartPeriod === 'monthly') {
-            key = `${month}/${year}`;
-        } else {
-            key = year;
-        }
-
-        dataMap[key] = (dataMap[key] || 0) + 1;
-    });
-
-    console.log('📊 Mapa de dados gerado:', dataMap);
-    console.log('📊 Total de chaves:', Object.keys(dataMap).length);
-
-    const sortedKeys = Object.keys(dataMap).sort((a, b) => {
-        const parseDate = (str) => {
-            const parts = str.split('/');
-            if (chartPeriod === 'daily') {
-                // DD/MM/YYYY
-                return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
-            } else if (chartPeriod === 'monthly') {
-                // MM/YYYY
-                return new Date(parseInt(parts[1]), parseInt(parts[0]) - 1, 1);
-            } else {
-                // YYYY
-                return new Date(parseInt(parts[0]), 0, 1);
+        let formattedDate = '';
+        if (item.date) {
+            const dateObj = toValidDate(item.date);
+            if (dateObj) {
+                const y = dateObj.getFullYear();
+                const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const d = String(dateObj.getDate()).padStart(2, '0');
+                formattedDate = `${y}-${m}-${d}`;
             }
+        }
+
+        formData = {
+            title: item.title,
+            author: item.author || '',
+            pages: item.pages.toString(),
+            status: item.status,
+            rating: item.rating,
+            date: formattedDate,
+            category: item.category,
+            country: item.country || ''
         };
-        return parseDate(a) - parseDate(b);
-    });
-
-    return sortedKeys.map(key => ({
-        label: key,
-        value: dataMap[key]
-    }));
-}
-
-function renderChart() {
-    const data = getChartData();
-    if (data.length === 0) {
-        return '<div class="text-center text-gray-500 py-12 text-sm">Nenhum dado disponível para o período selecionado</div>';
+        showForm = true;
+        render();
     }
 
-    const maxValue = Math.max(...data.map(d => d.value));
+    function resetForm() {
+        formData = {
+            title: '',
+            author: '',
+            pages: '',
+            status: 'Quero ler/assistir',
+            rating: '',
+            date: '',
+            category: 'Livro',
+            country: ''
+        };
+        showForm = false;
+        editingId = null;
+    }
 
-    return `
+    function getFilteredItems() {
+        console.log('Filtrando por:', filter, 'Termo:', searchTerm);
+        let filtered = items.filter(item => {
+            const cat = item.category;
+            const matchesFilter = filter === 'all' ||
+                (filter === 'books' && cat === 'Livro') ||
+                (filter === 'series' && (cat === 'Série' || cat === 'Serie')) ||
+                (filter === 'movies' && (cat === 'Filme' || cat === 'Filmes'));
+            const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (item.author && item.author.toLowerCase().includes(searchTerm.toLowerCase()));
+            return matchesFilter && matchesSearch;
+        });
+
+        filtered.sort((a, b) => {
+            switch (sortBy) {
+                case 'title-asc':
+                    return a.title.localeCompare(b.title);
+                case 'title-desc':
+                    return b.title.localeCompare(a.title);
+                case 'date-asc':
+                    return compareDates(a.date, b.date);
+                case 'date-desc':
+                    return compareDates(b.date, a.date);
+                case 'category':
+                    return a.category.localeCompare(b.category);
+                case 'status':
+                    const statusOrder = ['Quero ler/assistir', 'Lido', 'Assistido', 'Desisti'];
+                    return statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status);
+                case 'rating':
+                    const ratingOrder = ['Maravilhoso 😍', 'Muito bom 😊', 'Bom 🙂', 'Mais ou menos 🤨', 'Ruim 🙁', 'Péssimo 😒'];
+                    const aRating = a.rating ? ratingOrder.indexOf(a.rating) : 999;
+                    const bRating = b.rating ? ratingOrder.indexOf(b.rating) : 999;
+                    return aRating - bRating;
+                default:
+                    return 0;
+            }
+        });
+
+        return filtered;
+    }
+
+    function compareDates(dateA, dateB) {
+        const dA = toValidDate(dateA);
+        const dB = toValidDate(dateB);
+
+        if (!dA && !dB) return 0;
+        if (!dA) return 1;
+        if (!dB) return -1;
+
+        return dA.getTime() - dB.getTime();
+    }
+
+    function getStats() {
+        return {
+            total: items.length,
+            books: items.filter(i => i.category === 'Livro').length,
+            series: items.filter(i => i.category === 'Série').length,
+            movies: items.filter(i => i.category === 'Filme').length,
+            completed: items.filter(i => i.status === 'Lido' || i.status === 'Assistido').length
+        };
+    }
+
+    function getChartData() {
+        const filteredItems = items.filter(item => {
+            if (chartType === 'books') return item.category === 'Livro';
+            if (chartType === 'series') return item.category === 'Série';
+            if (chartType === 'movies') return item.category === 'Filme';
+            return true;
+        }).filter(item => item.status === 'Lido' || item.status === 'Assistido');
+
+        console.log('📊 Itens filtrados para gráfico:', filteredItems.length);
+
+        const dataMap = {};
+
+        filteredItems.forEach(item => {
+            if (!item.date) {
+                console.log('⚠️ Item sem data:', item.title);
+                return;
+            }
+
+            // Converte a data para o formato DD/MM/YYYY se necessário
+            let dateStr = item.date;
+
+            // Se for um objeto Date ou timestamp ISO
+            if (typeof dateStr === 'object' || dateStr.includes('T')) {
+                const dateObj = new Date(dateStr);
+                const day = String(dateObj.getDate()).padStart(2, '0');
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const year = dateObj.getFullYear();
+                dateStr = `${day}/${month}/${year}`;
+            }
+
+            const parts = dateStr.split('/');
+            if (parts.length !== 3) {
+                console.log('⚠️ Data em formato inesperado:', item.date, 'para item:', item.title);
+                return;
+            }
+
+            const day = parts[0];
+            const month = parts[1];
+            const year = parts[2];
+
+            let key;
+            if (chartPeriod === 'daily') {
+                key = `${day}/${month}/${year}`;
+            } else if (chartPeriod === 'monthly') {
+                key = `${month}/${year}`;
+            } else {
+                key = year;
+            }
+
+            dataMap[key] = (dataMap[key] || 0) + 1;
+        });
+
+        console.log('📊 Mapa de dados gerado:', dataMap);
+        console.log('📊 Total de chaves:', Object.keys(dataMap).length);
+
+        const sortedKeys = Object.keys(dataMap).sort((a, b) => {
+            const parseDate = (str) => {
+                const parts = str.split('/');
+                if (chartPeriod === 'daily') {
+                    // DD/MM/YYYY
+                    return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+                } else if (chartPeriod === 'monthly') {
+                    // MM/YYYY
+                    return new Date(parseInt(parts[1]), parseInt(parts[0]) - 1, 1);
+                } else {
+                    // YYYY
+                    return new Date(parseInt(parts[0]), 0, 1);
+                }
+            };
+            return parseDate(a) - parseDate(b);
+        });
+
+        return sortedKeys.map(key => ({
+            label: key,
+            value: dataMap[key]
+        }));
+    }
+
+    function renderChart() {
+        const data = getChartData();
+        if (data.length === 0) {
+            return '<div class="text-center text-gray-500 py-12 text-sm">Nenhum dado disponível para o período selecionado</div>';
+        }
+
+        const maxValue = Math.max(...data.map(d => d.value));
+
+        return `
         <div class="space-y-3">
             ${data.map(item => {
-        const percentage = (item.value / maxValue) * 100;
-        return `
+            const percentage = (item.value / maxValue) * 100;
+            return `
                     <div class="flex items-center gap-2">
                         <div class="w-20 md:w-32 text-xs md:text-sm text-gray-600 text-right flex-shrink-0">${item.label}</div>
                         <div class="flex-1 flex items-center gap-2">
@@ -925,13 +916,13 @@ function renderChart() {
                         </div>
                     </div>
                 `;
-    }).join('')}
+        }).join('')}
         </div>
     `;
-}
+    }
 
-function renderLogin() {
-    document.getElementById('app').innerHTML = `
+    function renderLogin() {
+        document.getElementById('app').innerHTML = `
         <div class="min-h-screen flex items-center justify-center p-4">
             <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
                 <div class="text-center mb-8">
@@ -1004,17 +995,17 @@ function renderLogin() {
             </div>
         </div>
     `;
-}
+    }
 
 
-function switchView(view) {
-    currentView = view;
-    render();
-}
+    function switchView(view) {
+        currentView = view;
+        render();
+    }
 
-function renderStatsView() {
-    const stats = getStats();
-    return `
+    function renderStatsView() {
+        const stats = getStats();
+        return `
         <div class="max-w-6xl mx-auto px-4 mt-6 pb-8">
             <h2 class="text-3xl font-bold mb-6 text-gray-800 flex items-center gap-2">
                 📊 Estatísticas Detalhadas
@@ -1076,22 +1067,22 @@ function renderStatsView() {
             </div>
         </div>
     `;
-}
-
-function render() {
-    if (!currentUser) {
-        renderLogin();
-        return;
     }
 
-    if (displayedItems.length === 0) {
-        loadMoreItems();
-    }
-    const stats = getStats();
-    const filteredItems = getFilteredItems();
-    const hasMore = displayedItems.length < filteredItems.length;
+    function render() {
+        if (!currentUser) {
+            renderLogin();
+            return;
+        }
 
-    document.getElementById('app').innerHTML = `
+        if (displayedItems.length === 0) {
+            loadMoreItems();
+        }
+        const stats = getStats();
+        const filteredItems = getFilteredItems();
+        const hasMore = displayedItems.length < filteredItems.length;
+
+        document.getElementById('app').innerHTML = `
         <!-- Header -->
         <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 shadow-lg shadow-purple-200/50">
             <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center text-center md:text-left gap-6">
@@ -1418,8 +1409,8 @@ function render() {
                         <div class="flex items-start gap-4 flex-1">
                             <div class="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center text-3xl shadow-inner group-hover:bg-purple-50 transition-colors" title="${item.category}">
                                 ${item.category === 'Livro' ? '📖' :
-            (item.category === 'Série' || item.category === 'Serie') ? '📺' :
-                (item.category === 'Filme' || item.category === 'Filmes') ? '🎬' : '❓'}
+                (item.category === 'Série' || item.category === 'Serie') ? '📺' :
+                    (item.category === 'Filme' || item.category === 'Filmes') ? '🎬' : '❓'}
                             </div>
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2 mb-1">
@@ -1513,101 +1504,101 @@ function render() {
             </div>
         </div>
         ` : ''
-        }
+            }
 `;
 
-    const input = document.getElementById('searchInput');
-    if (input && document.activeElement === input) {
-        const cursorPos = input.selectionStart;
-        input.value = searchInput;
-        input.setSelectionRange(cursorPos, cursorPos);
-    } else if (input) {
-        input.addEventListener('input', function (e) {
-            searchInput = e.target.value;
+        const input = document.getElementById('searchInput');
+        if (input && document.activeElement === input) {
+            const cursorPos = input.selectionStart;
+            input.value = searchInput;
+            input.setSelectionRange(cursorPos, cursorPos);
+        } else if (input) {
+            input.addEventListener('input', function (e) {
+                searchInput = e.target.value;
+            });
+        }
+
+        // Scroll para o formulário se estiver aberto
+        if (showForm) {
+            setTimeout(() => {
+                const formPanel = document.getElementById('formPanel');
+                if (formPanel) {
+                    formPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 100);
+        }
+    }
+
+
+    function handleRecap() {
+        showRecapModal = true;
+        recapYear = new Date().getFullYear();
+        render();
+    }
+
+    function getRecapData() {
+        const yearItems = items.filter(i => {
+            if (!i.date) return false;
+            const d = toValidDate(i.date);
+            return d && d.getFullYear() === parseInt(recapYear);
         });
+
+        const completedItems = yearItems.filter(i => i.status === 'Lido' || i.status === 'Assistido');
+
+        // Most used rating
+        const ratings = completedItems.map(i => i.rating).filter(r => r);
+        const ratingCounts = {};
+        ratings.forEach(r => ratingCounts[r] = (ratingCounts[r] || 0) + 1);
+        const mostUsedRating = Object.entries(ratingCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Nenhuma ainda';
+
+        // Favorite Category
+        const categoryCounts = {};
+        completedItems.forEach(i => categoryCounts[i.category] = (categoryCounts[i.category] || 0) + 1);
+        const favoriteCategory = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Nenhuma ainda';
+
+        // Stats for the year
+        const books = yearItems.filter(i => i.category === 'Livro');
+        const series = yearItems.filter(i => i.category === 'Série' || i.category === 'Serie');
+        const movies = yearItems.filter(i => i.category === 'Filme');
+
+        const completedBooks = books.filter(i => i.status === 'Lido');
+        const completedSeries = series.filter(i => i.status === 'Assistido');
+
+        const totalPages = completedBooks.reduce((sum, i) => sum + (parseInt(i.pages) || 0), 0);
+        const totalEpisodes = completedSeries.reduce((sum, i) => sum + (parseInt(i.pages) || 0), 0);
+
+        const yearStats = {
+            total: yearItems.length,
+            booksCount: books.length,
+            seriesCount: series.length,
+            moviesCount: movies.length,
+            completedBooksCount: completedBooks.length,
+            completedSeriesCount: completedSeries.length,
+            completedMoviesCount: movies.filter(i => i.status === 'Assistido').length,
+            completedItemsCount: completedItems.length,
+            totalPages,
+            totalEpisodes
+        };
+
+        return {
+            ...yearStats,
+            mostUsedRating,
+            favoriteCategory
+        };
     }
 
-    // Scroll para o formulário se estiver aberto
-    if (showForm) {
-        setTimeout(() => {
-            const formPanel = document.getElementById('formPanel');
-            if (formPanel) {
-                formPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        }, 100);
-    }
-}
+    function renderRecapModal() {
+        if (!showRecapModal) return '';
 
+        const data = getRecapData();
+        const currentYear = new Date().getFullYear();
+        const availableYears = [...new Set(items.filter(i => i.date).map(i => {
+            const d = toValidDate(i.date);
+            return d ? d.getFullYear() : null;
+        }).filter(y => y))].sort((a, b) => b - a);
+        if (!availableYears.includes(currentYear)) availableYears.unshift(currentYear);
 
-function handleRecap() {
-    showRecapModal = true;
-    recapYear = new Date().getFullYear();
-    render();
-}
-
-function getRecapData() {
-    const yearItems = items.filter(i => {
-        if (!i.date) return false;
-        const d = toValidDate(i.date);
-        return d && d.getFullYear() === parseInt(recapYear);
-    });
-
-    const completedItems = yearItems.filter(i => i.status === 'Lido' || i.status === 'Assistido');
-
-    // Most used rating
-    const ratings = completedItems.map(i => i.rating).filter(r => r);
-    const ratingCounts = {};
-    ratings.forEach(r => ratingCounts[r] = (ratingCounts[r] || 0) + 1);
-    const mostUsedRating = Object.entries(ratingCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Nenhuma ainda';
-
-    // Favorite Category
-    const categoryCounts = {};
-    completedItems.forEach(i => categoryCounts[i.category] = (categoryCounts[i.category] || 0) + 1);
-    const favoriteCategory = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Nenhuma ainda';
-
-    // Stats for the year
-    const books = yearItems.filter(i => i.category === 'Livro');
-    const series = yearItems.filter(i => i.category === 'Série' || i.category === 'Serie');
-    const movies = yearItems.filter(i => i.category === 'Filme');
-
-    const completedBooks = books.filter(i => i.status === 'Lido');
-    const completedSeries = series.filter(i => i.status === 'Assistido');
-
-    const totalPages = completedBooks.reduce((sum, i) => sum + (parseInt(i.pages) || 0), 0);
-    const totalEpisodes = completedSeries.reduce((sum, i) => sum + (parseInt(i.pages) || 0), 0);
-
-    const yearStats = {
-        total: yearItems.length,
-        booksCount: books.length,
-        seriesCount: series.length,
-        moviesCount: movies.length,
-        completedBooksCount: completedBooks.length,
-        completedSeriesCount: completedSeries.length,
-        completedMoviesCount: movies.filter(i => i.status === 'Assistido').length,
-        completedItemsCount: completedItems.length,
-        totalPages,
-        totalEpisodes
-    };
-
-    return {
-        ...yearStats,
-        mostUsedRating,
-        favoriteCategory
-    };
-}
-
-function renderRecapModal() {
-    if (!showRecapModal) return '';
-
-    const data = getRecapData();
-    const currentYear = new Date().getFullYear();
-    const availableYears = [...new Set(items.filter(i => i.date).map(i => {
-        const d = toValidDate(i.date);
-        return d ? d.getFullYear() : null;
-    }).filter(y => y))].sort((a, b) => b - a);
-    if (!availableYears.includes(currentYear)) availableYears.unshift(currentYear);
-
-    return `
+        return `
     <div class="fixed inset-0 z-[10000] flex items-center justify-center p-2 bg-black/60 backdrop-blur-sm animate-fade-in">
         <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm overflow-hidden relative max-h-[95vh] flex flex-col">
             <div class="bg-gradient-to-br from-purple-600 to-pink-600 p-6 text-white relative">
@@ -1734,35 +1725,35 @@ function renderRecapModal() {
         </div>
         </div>
     `;
-}
+    }
 
-// Splash Screen Logic
-function initSplashScreen() {
-    if (!isSplashActive) return;
+    // Splash Screen Logic
+    function initSplashScreen() {
+        if (!isSplashActive) return;
 
-    setTimeout(() => {
-        const splash = document.getElementById('splashScreen');
-        if (splash) {
-            splash.classList.add('fade-out');
-            setTimeout(() => {
-                isSplashActive = false;
-                render();
-            }, 800);
-        } else {
-            // Se o elemento não for encontrado (ex: render demorou), tenta novamente em breve
-            setTimeout(initSplashScreen, 500);
-        }
-    }, 2500);
-}
+        setTimeout(() => {
+            const splash = document.getElementById('splashScreen');
+            if (splash) {
+                splash.classList.add('fade-out');
+                setTimeout(() => {
+                    isSplashActive = false;
+                    render();
+                }, 800);
+            } else {
+                // Se o elemento não for encontrado (ex: render demorou), tenta novamente em breve
+                setTimeout(initSplashScreen, 500);
+            }
+        }, 2500);
+    }
 
-initSplashScreen();
+    initSplashScreen();
 
-checkSavedLogin();
+    checkSavedLogin();
 
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
 
-        const swCode = `
+            const swCode = `
 const CACHE_NAME = 'biblioteca-v3';
 
 self.addEventListener('install', (e) => {
@@ -1796,23 +1787,23 @@ self.addEventListener('fetch', (e) => {
 });
 `;
 
-        const blob = new Blob([swCode], { type: 'application/javascript' });
-        const swUrl = URL.createObjectURL(blob);
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
 
-        navigator.serviceWorker.register(swUrl)
-            .then(registration => {
-                registration.onupdatefound = () => {
-                    const installingWorker = registration.installing;
-                    installingWorker.onstatechange = () => {
-                        if (installingWorker.state === 'installed') {
-                            if (navigator.serviceWorker.controller) {
-                                // New update available
-                                console.log('Nova versão disponível!');
+            navigator.serviceWorker.register(swUrl)
+                .then(registration => {
+                    registration.onupdatefound = () => {
+                        const installingWorker = registration.installing;
+                        installingWorker.onstatechange = () => {
+                            if (installingWorker.state === 'installed') {
+                                if (navigator.serviceWorker.controller) {
+                                    // New update available
+                                    console.log('Nova versão disponível!');
+                                }
                             }
-                        }
+                        };
                     };
-                };
-            })
-            .catch(err => console.error('Erro ao registrar SW:', err));
-    });
-}
+                })
+                .catch(err => console.error('Erro ao registrar SW:', err));
+        });
+    }
