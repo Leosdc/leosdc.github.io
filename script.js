@@ -1147,13 +1147,13 @@ function render() {
                                 placeholder="Buscar nos registros..."
                                 value="${searchInput}"
                                 onkeypress="if(event.key === 'Enter') performSearch();"
-                                class="w-full pl-10 pr-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-purple-500 text-sm transition-all"
+                                class="w-full pl-10 pr-4 h-12 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-purple-500 text-sm transition-all"
                             />
                             <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
                         </div>
                         <button
                             onclick="performSearch();"
-                            class="px-6 py-3 bg-purple-600 text-white rounded-2xl font-bold hover:bg-purple-700 transition-all shadow-lg shadow-purple-200 active:scale-95 flex items-center justify-center min-w-[60px]"
+                            class="px-6 bg-purple-600 text-white rounded-2xl font-bold hover:bg-purple-700 transition-all shadow-lg shadow-purple-200 active:scale-95 flex items-center justify-center h-12"
                         >
                             <span class="hidden sm:inline">Buscar</span>
                             <span class="sm:hidden text-lg">🔍</span>
