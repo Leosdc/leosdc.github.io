@@ -2,16 +2,6 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
-## [5.3.1] - 2026-01-09
-### Corrigido
-- **Gráficos de Estatísticas**: Corrigido bug crítico onde os gráficos não exibiam dados. O problema era a conversão de datas ISO (timestamp) do Google Sheets para o formato DD/MM/YYYY.
-- **Menu de Ordenação**: O menu "Ordenar Lista" agora destaca visualmente a opção selecionada com fundo roxo claro e texto em negrito.
-- **Botão Buscar**: Ajustado o tamanho do botão "Buscar" para ficar perfeitamente alinhado com a barra de pesquisa (altura fixa de 48px).
-
-### Técnico
-- Implementada função de conversão automática de timestamps ISO para formato DD/MM/YYYY na função `getChartData()`.
-- Adicionado destaque visual condicional (`${sortBy === '...' ? 'bg-purple-100 text-purple-700 font-bold' : ''}`) no menu de ordenação.
-
 ## [5.3.0] - 2026-01-06
 ### Adicionado
 - **Nova interface**: Criada uma nova interface gráfica para o app, com transições mais suaves.

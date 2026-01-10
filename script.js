@@ -673,15 +673,10 @@ async function handleSubmit() {
         return;
     }
 
-    // Converte data para DD/MM/YYYY se necessário
-    let finalDate = '';
-    if (formData.date) {
-        if (formData.date.includes('-')) {
-            const parts = formData.date.split('-');
-            finalDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-        } else {
-            finalDate = formatDate(formData.date);
-        }
+    let finalDate = formData.date;
+    if (formData.date && formData.date.includes('-')) {
+        const parts = formData.date.split('-');
+        finalDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
     }
 
     const itemData = {
@@ -690,7 +685,7 @@ async function handleSubmit() {
         pages: formData.pages,
         status: formData.status,
         rating: formData.rating,
-        date: finalDate,
+        date: formData.date ? formatDate(formData.date) : '',
         category: formData.category,
         country: formData.country
     };
@@ -833,33 +828,13 @@ function getChartData() {
         return true;
     }).filter(item => item.status === 'Lido' || item.status === 'Assistido');
 
-    console.log('📊 Itens filtrados para gráfico:', filteredItems.length);
-
     const dataMap = {};
 
     filteredItems.forEach(item => {
-        if (!item.date) {
-            console.log('⚠️ Item sem data:', item.title);
-            return;
-        }
+        if (!item.date) return;
 
-        // Converte a data para o formato DD/MM/YYYY se necessário
-        let dateStr = item.date;
-
-        // Se for um objeto Date ou timestamp ISO
-        if (typeof dateStr === 'object' || dateStr.includes('T')) {
-            const dateObj = new Date(dateStr);
-            const day = String(dateObj.getDate()).padStart(2, '0');
-            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-            const year = dateObj.getFullYear();
-            dateStr = `${day}/${month}/${year}`;
-        }
-
-        const parts = dateStr.split('/');
-        if (parts.length !== 3) {
-            console.log('⚠️ Data em formato inesperado:', item.date, 'para item:', item.title);
-            return;
-        }
+        const parts = item.date.split('/');
+        if (parts.length !== 3) return;
 
         const day = parts[0];
         const month = parts[1];
@@ -877,21 +852,15 @@ function getChartData() {
         dataMap[key] = (dataMap[key] || 0) + 1;
     });
 
-    console.log('📊 Mapa de dados gerado:', dataMap);
-    console.log('📊 Total de chaves:', Object.keys(dataMap).length);
-
     const sortedKeys = Object.keys(dataMap).sort((a, b) => {
         const parseDate = (str) => {
             const parts = str.split('/');
             if (chartPeriod === 'daily') {
-                // DD/MM/YYYY
-                return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+                return new Date(parts[2], parts[1] - 1, parts[0]);
             } else if (chartPeriod === 'monthly') {
-                // MM/YYYY
-                return new Date(parseInt(parts[1]), parseInt(parts[0]) - 1, 1);
+                return new Date(parts[1], parts[0] - 1);
             } else {
-                // YYYY
-                return new Date(parseInt(parts[0]), 0, 1);
+                return new Date(parts[0]);
             }
         };
         return parseDate(a) - parseDate(b);
@@ -1182,13 +1151,13 @@ function render() {
                                 placeholder="Buscar nos registros..."
                                 value="${searchInput}"
                                 onkeypress="if(event.key === 'Enter') performSearch();"
-                                class="w-full pl-10 pr-4 h-12 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-purple-500 text-sm transition-all"
+                                class="w-full pl-10 pr-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-purple-500 text-sm transition-all"
                             />
                             <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
                         </div>
                         <button
                             onclick="performSearch();"
-                            class="px-6 bg-purple-600 text-white rounded-2xl font-bold hover:bg-purple-700 transition-all shadow-lg shadow-purple-200 active:scale-95 flex items-center justify-center h-12"
+                            class="px-6 py-3 bg-purple-600 text-white rounded-2xl font-bold hover:bg-purple-700 transition-all shadow-lg shadow-purple-200 active:scale-95 flex items-center justify-center min-w-[60px]"
                         >
                             <span class="hidden sm:inline">Buscar</span>
                             <span class="sm:hidden text-lg">🔍</span>
@@ -1259,13 +1228,13 @@ function render() {
                             </button>
                             ${showSortMenu ? `
                             <div class="absolute right-0 mt-2 w-48 bg-white border border-purple-50 rounded-2xl shadow-2xl p-2 z-[100] animate-fade-in max-h-64 overflow-y-auto shadow-purple-200/50">
-                                    <button onclick="sortBy='title-asc'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-purple-50 rounded-xl text-sm transition-colors ${sortBy === 'title-asc' ? 'bg-purple-100 text-purple-700 font-bold' : ''}">Título A–Z</button>
-                                    <button onclick="sortBy='title-desc'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-purple-50 rounded-xl text-sm transition-colors ${sortBy === 'title-desc' ? 'bg-purple-100 text-purple-700 font-bold' : ''}">Título Z–A</button>
-                                    <button onclick="sortBy='date-desc'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-purple-50 rounded-xl text-sm transition-colors ${sortBy === 'date-desc' ? 'bg-purple-100 text-purple-700 font-bold' : ''}">Mais recentes</button>
-                                    <button onclick="sortBy='date-asc'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-purple-50 rounded-xl text-sm transition-colors ${sortBy === 'date-asc' ? 'bg-purple-100 text-purple-700 font-bold' : ''}">Mais antigos</button>
-                                    <button onclick="sortBy='category'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-purple-50 rounded-xl text-sm transition-colors ${sortBy === 'category' ? 'bg-purple-100 text-purple-700 font-bold' : ''}">Categoria</button>
-                                    <button onclick="sortBy='status'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-purple-50 rounded-xl text-sm transition-colors ${sortBy === 'status' ? 'bg-purple-100 text-purple-700 font-bold' : ''}">Status</button>
-                                    <button onclick="sortBy='rating'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-purple-50 rounded-xl text-sm transition-colors ${sortBy === 'rating' ? 'bg-purple-100 text-purple-700 font-bold' : ''}">Avaliação</button>
+                                <button onclick="sortBy='title-asc'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-purple-50 rounded-xl text-sm transition-colors">Título A–Z</button>
+                                <button onclick="sortBy='title-desc'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-purple-50 rounded-xl text-sm transition-colors">Título Z–A</button>
+                                <button onclick="sortBy='date-desc'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-purple-50 rounded-xl text-sm transition-colors font-bold text-purple-600">Mais recentes</button>
+                                <button onclick="sortBy='date-asc'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-purple-50 rounded-xl text-sm transition-colors">Mais antigos</button>
+                                <button onclick="sortBy='category'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-purple-50 rounded-xl text-sm transition-colors">Categoria</button>
+                                <button onclick="sortBy='status'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-purple-50 rounded-xl text-sm transition-colors">Status</button>
+                                <button onclick="sortBy='rating'; showSortMenu=false; resetPagination(); render();" class="block w-full text-left px-4 py-2 hover:bg-purple-50 rounded-xl text-sm transition-colors">Avaliação</button>
                             </div>
                             ` : ''}
                         </div>
