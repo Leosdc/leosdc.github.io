@@ -49,7 +49,58 @@ App que fiz para minha esposa organizar e gerenciar livros, séries e filmes!
 - **IA Curiosa**: Receba fatos e curiosidades sobre os itens da sua biblioteca
 - **Segurança de API**: Chave do Groq escondida com segurança no Google Apps Script
 
-### Como usar o Aplicativo
+## 🚀 Como Usar
+
+### 1. Preparação do Google Sheets
+
+#### a) Criar a Planilha
+1. Acesse [Google Sheets](https://sheets.google.com)
+2. Crie uma nova planilha
+3. Renomeie a primeira aba para **"Usuarios"**
+4. Crie uma segunda aba chamada **"Biblioteca"**
+
+#### b) Configurar a Aba "Usuarios"
+Na primeira linha, adicione os seguintes cabeçalhos:
+```
+Usuario | Senha
+```
+
+#### c) Configurar Abas de Usuário
+As abas dos usuários são criadas automaticamente. Elas seguem este padrão de cabeçalho:
+```
+Usuário | Título | Autor | Páginas/Episódios | Status | Avaliação | Data | Categoria | País
+```
+*(Nota: O campo "Tempo médio" foi removido na versão 5.0)*
+
+### 2. Configuração do Google Apps Script
+
+#### a) Abrir o Editor de Scripts
+1. Na planilha, vá em **Extensões > Apps Script**
+2. Delete qualquer código existente
+3. Cole o código atualizado do servidor (backend).
+
+*(Consulte o código atualizado do `server.js` ou arquivo correspondente se houver, ou mantenha o script anterior mas saiba que o campo Tempo Médio não será mais enviado)*
+
+#### b) Implantar o Script
+1. Clique em **Implantar > Nova implantação**
+2. Selecione **Aplicativo da Web**
+3. Configure como "Executar como: Eu" e "Acesso: Qualquer pessoa"
+4. Copie a URL gerada
+
+#### c) Configurar API Key do Groq
+1. No Apps Script, vá em **Configurações do Projeto (engrenagem)**
+2. Procure por **Propriedades do script**
+3. Adicione uma propriedade com nome `GROQ_API_KEY` e cole sua chave do Groq
+4. Execute a função `doPost` uma vez para autorizar chamadas externas (`UrlFetchApp`)
+
+### 3. Configuração do Arquivo HTML
+
+A partir da versão 3.0, o projeto é modular.
+1. Abra o arquivo `env.js` (ou crie um se não existir)
+2. Defina a `API_URL` com a URL do seu Apps Script
+3. Certifique-se de que o `env.js` está listado no `.gitignore`
+
+### 4. Usar o Aplicativo
 
 #### Adicionar Itens
 1. Clique no botão **➕ Adicionar**

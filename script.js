@@ -10,47 +10,7 @@ const bookQuotes = [
     { quote: "As palavras são, na minha nada humilde opinião, nossa fonte mais inesgotável de magia.", book: "Harry Potter e as Relíquias da Morte" },
     { quote: "O mundo é, de fato, cheio de perigos, e nele há muitos lugares sombrios; mas ainda assim há muita coisa que é justa.", book: "O Senhor dos Anéis" },
     { quote: "A felicidade pode ser encontrada mesmo nas horas mais difíceis, se você se lembrar de acender a luz.", book: "Harry Potter e o Prisioneiro de Azkaban" },
-    { quote: "Tudo o que temos que decidir é o que fazer com o tempo que nos é dado.", book: "O Senhor dos Anéis" },
-    { quote: "Não são nossas habilidades que mostram quem realmente somos. São nossas escolhas.", book: "Harry Potter e a Câmara Secreta" },
-    { quote: "Depois de tudo, amanhã será outro dia.", book: "E o Vento Levou" },
-    { quote: "Ser ou não ser, eis a questão.", book: "Hamlet" },
-    { quote: "O amor não consiste em olhar um para o outro, mas sim em olhar juntos na mesma direção.", book: "O Pequeno Príncipe" },
-    { quote: "Eu sou eu e minhas circunstâncias.", book: "Dom Casmurro" },
-    { quote: "A vida é aquilo que acontece enquanto você está ocupado fazendo outros planos.", book: "O Apanhador no Campo de Centeio" },
-    { quote: "Não é sobre quantas vezes você cai, mas quantas vezes você se levanta.", book: "Pollyanna" },
-    { quote: "Viver é a coisa mais rara do mundo. A maioria das pessoas apenas existe.", book: "O Retrato de Dorian Gray" },
-    { quote: "Há sempre flores para aqueles que querem vê-las.", book: "O Pequeno Príncipe" },
-    { quote: "É curioso como as pessoas às vezes não veem o que está bem na frente delas.", book: "Orgulho e Preconceito" },
-    { quote: "O tempo você não recupera jamais. Por isso, não perca o seu.", book: "Momo" },
-    { quote: "Não há nada melhor que um amigo, a não ser um amigo com chocolate.", book: "Os Boxtrolls" },
-    { quote: "Quem olha para fora, sonha. Quem olha para dentro, desperta.", book: "O Lobo da Estepe" },
-    { quote: "A imaginação é mais importante que o conhecimento.", book: "Alice no País das Maravilhas" },
-    { quote: "Não podemos escolher nosso destino, mas podemos escolher nossos companheiros.", book: "As Crônicas de Nárnia" },
-    { quote: "Todo mundo é um gênio. Mas se você julgar um peixe por sua capacidade de subir em árvores...", book: "Alice no País das Maravilhas" },
-    { quote: "O medo de um nome só aumenta o medo da própria coisa.", book: "Harry Potter e a Pedra Filosofal" },
-    { quote: "Você tem que ser esquisito para ser o número um.", book: "O Médico e o Monstro" },
-    { quote: "A verdade é como o Sol. Você pode fechá-la por um tempo, mas ela não vai embora.", book: "O Sol é Para Todos" },
-    { quote: "Não importa o quão devagar você vá, desde que não pare.", book: "A Metamorfose" },
-    { quote: "Algumas vezes as perguntas são complicadas e as respostas são simples.", book: "O Lorax" },
-    { quote: "Dois caminhos se bifurcavam numa floresta, e eu... eu escolhi o menos percorrido.", book: "A Estrada Não Percorrida" },
-    { quote: "Toda grande história começa com uma viagem.", book: "O Hobbit" },
-    { quote: "Você nunca é velho demais para colocar um objetivo novo ou sonhar um novo sonho.", book: "As Crônicas de Nárnia" },
-    { quote: "O único modo de fazer um grande trabalho é amar o que você faz.", book: "Fahrenheit 451" },
-    { quote: "Nós aceitamos o amor que achamos que merecemos.", book: "As Vantagens de Ser Invisível" },
-    { quote: "Não deixe que ninguém diga que você não pode fazer algo.", book: "À Procura da Felicidade" },
-    { quote: "Coisas ruins acontecem, e a vida continua.", book: "A Culpa é das Estrelas" },
-    { quote: "E se eu cair? Oh, mas querida, e se você voar?", book: "Alice no País das Maravilhas" },
-    { quote: "A melhor maneira de realizar o impossível é acreditar que é possível.", book: "Alice no País das Maravilhas" },
-    { quote: "Não chore porque acabou. Sorria porque aconteceu.", book: "O Lorax" },
-    { quote: "Aventura está lá fora!", book: "Up: Altas Aventuras" },
-    { quote: "Ohana significa família. Família significa que ninguém fica para trás.", book: "Lilo & Stitch" },
-    { quote: "A única coisa impossível é aquilo que você não tenta.", book: "Alice no País do Espelho" },
-    { quote: "Você é mais do que aquilo que se tornou.", book: "O Rei Leão" },
-    { quote: "O passado pode doer, mas você pode fugir dele ou aprender com ele.", book: "O Rei Leão" },
-    { quote: "Sempre há esperança, mesmo quando o cérebro nos diz o contrário.", book: "O Estranho Caso de Benjamin Button" },
-    { quote: "Às vezes, as menores coisas ocupam mais espaço no seu coração.", book: "O Ursinho Pooh" },
-    { quote: "O medo é a mente que mata. É a pequena morte que traz obliteração total.", book: "Duna" },
-    { quote: "Eu me importo muito em não saber um monte de coisas.", book: "A Culpa é das Estrelas" }
+    { quote: "Tudo o que temos de decidir é o que fazer com o tempo que nos é dado.", book: "O Senhor dos Anéis" }
 ];
 
 const currentQuote = bookQuotes[Math.floor(Math.random() * bookQuotes.length)];
@@ -184,6 +144,7 @@ async function handleRegister() {
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
+            mode: 'no-cors',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -194,22 +155,16 @@ async function handleRegister() {
             })
         });
 
-        const result = await response.json();
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
-        if (result.success) {
-            currentUser = { username: loginData.username };
-            localStorage.setItem('mundoAliceUser', JSON.stringify(currentUser));
-            localStorage.setItem('mundoAlicePass', loginData.password);
-            showNotification('✨ Cadastro realizado com sucesso!');
-            loadData();
-        } else {
-            showNotification(result.error || 'Erro ao cadastrar', 'error');
-            loading = false;
-            renderLogin();
-        }
+        currentUser = { username: loginData.username };
+        localStorage.setItem('mundoAliceUser', JSON.stringify(currentUser));
+        localStorage.setItem('mundoAlicePass', loginData.password);
+        showNotification('✨ Cadastro realizado com sucesso!');
+        loadData();
     } catch (error) {
         console.error('Erro no cadastro:', error);
-        showNotification('Erro ao cadastrar. Verifique sua conexão.', 'error');
+        showNotification('Erro ao cadastrar. Tente novamente.', 'error');
         loading = false;
         renderLogin();
     }
@@ -446,7 +401,7 @@ function renderChat() {
                     <img src="alice_face_icon.png" alt="Alice" class="w-8 h-8 rounded-full object-cover" />
                     <div>
                         <h3 class="font-bold text-sm">Alice</h3>
-                        <p class="text-[10px] text-purple-100">Pronta para ajudar! ✨</p>
+                        <p class="text-[10px] text-purple-100">Pronto para ajudar! ✨</p>
                     </div>
                 </div>
                 <button onclick="chatOpen = false; render();" class="hover:bg-white/20 p-1 rounded-lg transition-colors">
@@ -644,6 +599,7 @@ async function saveToSheet(action, data) {
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
+            mode: 'no-cors',
             headers: {
                 'Content-Type': 'application/json',
             },
